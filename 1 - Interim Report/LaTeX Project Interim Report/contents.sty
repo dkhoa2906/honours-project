@@ -1,0 +1,63 @@
+%-------------------------------------%
+% Birmingham City University
+% Joint Program with University of Information Technology, VNU-HCM
+% Module: Individual Honours Project
+% 
+% -----
+%
+% A Game-Based Approach to Motor Imagery Adaptation and BCI Calibration
+% Author: Cao Đăng Khoa (dang.cao@mail.bcu.ac.uk)
+% Student ID: 25195675
+%
+% Supervisor: Dr. Vi Chí Thành (vcthanh@hcmiu.edu.vn)
+%------------------------------------%
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{contents}[2025/12/01 v1.0 Honours Project Report Contents Formatting]
+
+\RequirePackage{titlesec}
+\RequirePackage{microtype} % Better justification and typography
+\RequirePackage{setspace} % Line spacing control
+
+% Prevent chapters from starting on a new page
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
+\makeatother
+
+% Remove paragraph indentation
+\setlength{\parindent}{0pt}
+
+% Change chapter numbering to X.0 format
+\renewcommand{\thechapter}{\arabic{chapter}.0}
+\renewcommand{\thesection}{\arabic{chapter}.\arabic{section}}
+
+
+% Chapter formatting: Normal font size, left-aligned, 2-line space above, 1-line below
+\titleformat{\chapter}[hang]
+    {\normalfont\normalsize\bfseries\raggedright} 
+    {\thechapter} {5pt} {} 
+    \titlespacing*{\chapter}{0pt}{10pt}{0pt}
+
+% Section formatting: Sentence case, 2-line space above, 1-line below
+\titleformat{\section}
+    {\normalfont\normalsize\bfseries\raggedright}
+    {\thesection}{5pt}{}
+    \titlespacing*{\section}{0pt}{10pt}{0pt}
+
+% Subsection formatting: Italic, 1-line space above and below
+\titleformat{\subsection}
+    {\normalfont\normalsize\itshape\raggedright} 
+    {\thesubsection} % Label
+    {1pt} % Sep
+    {} % Before-code
+\titlespacing*{\subsection}
+    {0pt} % Left
+    {0pt} % Before (1-line space)
+    {0pt} % After (1-line space)
+
+
+
+
+
+
