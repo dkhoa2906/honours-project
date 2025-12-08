@@ -24,12 +24,13 @@
 \usepackage{frontmatter}
 \usepackage{contents}
 \usepackage{atbegshi}
-\usepackage[round, authoryear]{natbib}
-\let\cite\citep
+\usepackage[authoryear]{natbib}
 
 \makeatletter
+\renewcommand{\cite}[1]{\textsuperscript{\footnotesize(\citeauthor{#1}, \citeyear{#1})}}
 \let\ps@plain\ps@fancy
 \makeatother
+
 %------------------------------------%
 
 

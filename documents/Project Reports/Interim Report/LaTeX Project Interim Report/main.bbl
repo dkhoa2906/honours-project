@@ -7,32 +7,39 @@ Birbaumer, N. (2006).
 
 \bibitem[Giles et~al., 2022]{Giles2022}
 Giles, J., Ryu, S.~H., Kang, P.~H., et~al. (2022).
-\newblock A transfer learning algorithm to reduce brain-computer interface calibration time.
+\newblock A transfer learning algorithm to reduce brain-computer interface
+  calibration time.
 \newblock {\em Frontiers in Neuroergonomics}, 3:837307.
 
 \bibitem[Kueper et~al., 2024]{Kueper2024}
 Kueper, N. et~al. (2024).
-\newblock Avoidance of specific calibration sessions in motor intention recognition.
+\newblock Avoidance of specific calibration sessions in motor intention
+  recognition.
 \newblock {\em Nature Scientific Reports}, 14:28234.
 
 \bibitem[Kübler et~al., 2001]{Kübler2001}
-Kübler, A., Kotchoubey, B., Kaiser, J., Wolpaw, J.~R., and Birbaumer, N. (2001).
+Kübler, A., Kotchoubey, B., Kaiser, J., Wolpaw, J.~R., and Birbaumer, N.
+  (2001).
 \newblock Brain-computer communication: unlocking the locked in.
 \newblock {\em Psychological Bulletin}, 127(3):358--375.
 
 \bibitem[Lotte et~al., 2018]{Lotte2018}
-Lotte, F., Bougrain, L., Cichocki, A., Clerc, M., Congedo, M., Kothe, C., and Yger, F. (2018).
-\newblock A review of classification algorithms for {EEG}-based brain-computer interfaces: a 10 year update.
+Lotte, F., Bougrain, L., Cichocki, A., Clerc, M., Congedo, M., Kothe, C., and
+  Yger, F. (2018).
+\newblock A review of classification algorithms for {EEG}-based brain-computer
+  interfaces: a 10 year update.
 \newblock {\em Journal of Neural Engineering}, 15(3):031005.
 
 \bibitem[Neuper and Pfurtscheller, 2001]{Neuper2001}
 Neuper, C. and Pfurtscheller, G. (2001).
-\newblock Event-related dynamics of cortical rhythms: frequency-specific features for brain-computer interfaces.
+\newblock Event-related dynamics of cortical rhythms: frequency-specific
+  features for brain-computer interfaces.
 \newblock {\em Progress in Brain Research}, 159:199--213.
 
 \bibitem[Pfurtscheller and {Lopes da Silva}, 2001]{Pfurtscheller2001}
 Pfurtscheller, G. and {Lopes da Silva}, F.~H. (2001).
-\newblock Event-related {EEG}/{MEG} synchronization and desynchronization: basic principles.
+\newblock Event-related {EEG}/{MEG} synchronization and desynchronization:
+  basic principles.
 \newblock {\em Clinical Neurophysiology}, 110(11):1842--1857.
 
 \bibitem[Sugiyama et~al., 2008]{Sugiyama2008}
@@ -41,13 +48,15 @@ Sugiyama, M., Krauledat, M., and Müller, K.~R. (2008).
 \newblock {\em Neural Networks}, 21(9):1490--1503.
 
 \bibitem[Wolpaw et~al., 2002]{Wolpaw2002}
-Wolpaw, J.~R., Birbaumer, N., McFarland, D.~J., Pfurtscheller, G., and Vaughan, T.~M. (2002).
+Wolpaw, J.~R., Birbaumer, N., McFarland, D.~J., Pfurtscheller, G., and Vaughan,
+  T.~M. (2002).
 \newblock Brain-computer interfaces for communication and control.
 \newblock {\em Clinical Neurophysiology}, 113(6):767--791.
 
 \bibitem[Xu et~al., 2024]{Xu2024}
 Xu, Y. et~al. (2024).
-\newblock Improved motor imagery training for subject's self-modulation in {EEG}-based brain-computer interfaces.
+\newblock Improved motor imagery training for subject's self-modulation in
+  {EEG}-based brain-computer interfaces.
 \newblock {\em Frontiers in Human Neuroscience}, 18:1447662.
 
 \end{thebibliography}
