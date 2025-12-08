@@ -1,0 +1,19 @@
+1.1
+The way humans interact with computers has undergone a significant evolution over time. From early keyboards and mice to modern touchscreen devices and voice assistants, each innovation has expanded how people can engage with digital systems. But what if humans were able to communicate with technology simply by thought? This is what next-generation technology is achieving: Brain-Computer Interfaces (BCIs), systems that allow people to control devices with their thoughts. By reading neural signals directly from the human brain and translating them into digital commands for computers to understand, BCIs not only enhance the experience for typical users but also enable people with physical limitations to access technology more easily.
+
+Among various types of BCI applications, electroencephalography-based motor imagery (EEG-MI) is one of the most widely studied areas. This concept is based on a key principle of neuroscience. Whenever a person imagines a movement - such as moving a hand or foot - without performing it physically, their brain still produces characteristic signals with patterns that are remarkably similar to the actual physical execution. Building on this principle, EEG-based MI has been applied in many real-world scenarios, including motor rehabilitation, assistive control for individuals with disabilities, and control of games.
+
+These promising applications, however, still depend heavily on how accurately MI signals can be detected. This accuracy is influenced by many factors, with the calibration process playing a crucial role, which is also the main focus of this project.
+
+
+1.2 
+In controlled laboratory environments, where the calibration process is managed with precision, EEG-MI systems demonstrate a high level of performance in classifying motor signals. After an initial training phase, these classifiers often reach accuracies above 70% in distinguishing between imagined movements such as left hand, right hand, foot, or a rest state, a level that is commonly taken as the threshold for effective BCI control.
+
+However, achieving this level of performance for each individual user requires a significant calibration effort. In practice, the system must learn a user's specific neural patterns through 15-30 minutes of supervised training, typically collecting 40-80 labelled trials per movement class (around 120-240 trials in total). Moreover, these EEG patterns vary significantly between sessions even for the same user due to non-stationarities.
+
+The repetitive and cognitively demanding nature of EEG-MI makes it challenging to implement outside controlled laboratory settings. It is time-consuming, requires dedicated human supervision, and depends on specialised lab facilities (often geographically distant). It also induces cognitive fatigue, degrades signal quality over time, and limits practicality for multi-session applications like rehabilitation. Consequently, despite decades of research, this technology remains largely confined to laboratories rather than achieving widespread real-world adoption.
+
+1.3
+
+EEG-MI calibration per session requires 15-30 minutes of repetitive trials, which limits real-world scalability despite over 70% success in the experimental environment. This limitation arises from changes in brain signals between sessions and across different individuals, the need for human supervision, and reliance on specific infrastructure.
+

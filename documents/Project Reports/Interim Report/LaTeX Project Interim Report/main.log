@@ -1,10 +1,10 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  3 DEC 2025 00:36
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  8 DEC 2025 17:36
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**"/Users/dkhoamac/Documents/Honours Project/Interim Report/LaTeX Project Interim Report/main"
-(/Users/dkhoamac/Documents/Honours Project/Interim Report/LaTeX Project Interim Report/main.tex
+**"/Users/dkhoamac/Documents/Honours Project/documents/Project Reports/Interim Report/LaTeX Project Interim Report/main"
+(/Users/dkhoamac/Documents/Honours Project/documents/Project Reports/Interim Report/LaTeX Project Interim Report/main.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 (/usr/local/Cellar/texlive/20250308_2/share/texmf-dist/tex/latex/base/report.cls
@@ -441,8 +441,15 @@ File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [3]
 Chapter 1.0.
-Chapter 2.0.
-Chapter 3.0.
+LaTeX Font Info:    Font shape `TU/Arial(0)/m/n' will be
+(Font)              scaled to size 14.4pt on input line 72.
+LaTeX Font Info:    Font shape `TU/Arial(0)/b/n' will be
+(Font)              scaled to size 14.4pt on input line 72.
+
+Overfull \hbox (123.81308pt too wide) in paragraph at lines 88--97
+\TU/Arial(0)/m/n/10.95 istic signals with patterns that are remarkably similar to the actual physical execution.[[]]
+ []
+
 
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
@@ -450,28 +457,45 @@ File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 [1
 
 ]
+Overfull \hbox (13.56236pt too wide) in paragraph at lines 117--118
+\TU/Arial(0)/m/n/10.95 world scalability despite over 70% success in the experimental environment.[[],
+ []
+
+
+Overfull \hbox (72.33345pt too wide) in paragraph at lines 117--118
+\TU/Arial(0)/m/n/10.95 and across different individuals,[[]] the need for human supervision,[[]]
+ []
+
+Chapter 2.0.
+Chapter 3.0.
+
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [2]
-Chapter 4.0.
-
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
-[3] (./main.aux)
+[3] (./main.bbl
+LaTeX Font Info:    Font shape `TU/Arial(0)/m/it' will be
+(Font)              scaled to size 10.95pt on input line 6.
+)
+
+File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
+<use ./Logo/bcu-logo.pdf>
+[4] (./main.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 7226 strings out of 473832
- 170506 string characters out of 5720759
- 635555 words of memory out of 5000000
- 30220 multiletter control sequences out of 15000+600000
- 561744 words of font info for 66 fonts, out of 8000000 for 9000
+ 7253 strings out of 473832
+ 171174 string characters out of 5720759
+ 637562 words of memory out of 5000000
+ 30241 multiletter control sequences out of 15000+600000
+ 561768 words of font info for 69 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 94i,15n,107p,1085b,474s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 94i,16n,107p,1111b,474s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (7 pages).
+Output written on main.pdf (8 pages).

@@ -69,26 +69,53 @@
 %------------ CHAPTER 1 -------------%
 %----- Introduction and Context -----%
 \vspace*{-1.15cm}
-\chapter{Introduction and Context}
+\chapter{INTRODUCTION AND CONTEXT}
     % 1.0 Introduction and Context
-    This section introduces your project. It should be brief yet engaging, capturing the reader's 
-    interest and highlighting the significance of your work. \par
 
-    Begin broadly by introducing the subject and its main discipline, such as cybersecurity, 
-    sustainable engineering, or healthcare analytics. Provide an overview of the background and 
-    current situation, offering enough context so a reader unfamiliar with the field can understand 
-    its significance. Why is this area of modern relevance? \par
+    \section{Background and Significance}
 
-    Note: Remember to use in-text citations for statements that support your core arguments. This 
-    applies to all sections throughout your project report. 
+    The way humans interact with computers has undergone a significant evolution over time. 
+    From early keyboards and mice to modern touchscreen devices and voice assistants, 
+    each innovation has expanded how people can engage with digital systems. But what 
+    if humans were able to communicate with technology simply by thought? This is what 
+    next-generation technology is achieving: Brain-Computer Interfaces (BCIs), systems 
+    that allow people to control devices with their thoughts.\cite{Birbaumer2006} By 
+    reading neural signals directly from the human brain and translating them into 
+    digital commands for computers to understand, BCIs not only enhance the experience 
+    for typical users but also enable people with physical limitations to access technology 
+    more easily.
 
-    % 1.1 Problem Statement
+    Among various types of BCI applications, electroencephalography-based motor imagery 
+    (EEG-MI) is one of the most widely studied areas.\cite{Lotte2018} This concept is 
+    based on a key principle of neuroscience: whenever a person imagines a movement---
+    such as moving a hand or foot---without performing it physically, their brain still 
+    produces characteristic signals with patterns that are remarkably similar to the 
+    actual physical execution.\cite{Neuper2001} Building on this principle, EEG-based 
+    MI has been applied in many real-world scenarios, including motor rehabilitation, 
+    assistive control for individuals with disabilities, and control of games.
+    \cite{Pfurtscheller2001}
+
+    These promising applications, however, still depend heavily on how accurately MI 
+    signals can be detected. This accuracy is influenced by many factors, with the 
+    calibration process playing a crucial role.\cite{Lotte2018} Calibration---the 
+    supervised training phase where the system learns individual user neural 
+    patterns---remains a critical bottleneck limiting practical deployment, which is 
+    the main focus of this project.
+
+
+    % 1.2 Current State and Limitations
+    \section{Current State and Limitations}
+
+    In controlled laboratory environments, where the calibration process is managed with precision, EEG-MI systems demonstrate a high level of performance in classifying motor signals.\cite{Lotte2018} After an initial training phase, these classifiers often reach accuracies above 70\% in distinguishing between imagined movements such as left hand, right hand, foot, or a rest state, a level that is commonly taken as the threshold for effective BCI control.\cite{Kübler2001}
+
+    However, achieving this level of performance for each individual user requires a significant calibration effort. In practice, the system must learn a user's specific neural patterns through 15--30 minutes of supervised training, typically collecting 40--80 labelled trials per movement class (around 120--240 trials in total).\cite{Giles2022} Moreover, these EEG patterns vary significantly between sessions even for the same user due to non-stationarities.\cite{Sugiyama2008}
+
+    The repetitive and cognitively demanding nature of EEG-MI makes it challenging to implement outside controlled laboratory settings.\cite{Xu2024} It is time-consuming, requires dedicated human supervision, and depends on specialised lab facilities (often geographically distant). It also induces cognitive fatigue, degrades signal quality over time, and limits practicality for multi-session applications like rehabilitation.\cite{Xu2024} Consequently, despite decades of research, this technology remains largely confined to laboratories rather than achieving widespread real-world adoption.\cite{Wolpaw2002}
+
     \section{Problem Statement}
-    Clearly and specifically state the problem your project is designed to address. This should be 
-    a concise statement that identifies the key issue. Think of it as the "what" and "why" of your 
-    project, all in one or two sentences. For example: "Small to medium-sized enterprises (SMEs) 
-    lack affordable and scalable cybersecurity solutions, leaving them highly susceptible to data 
-    breaches." \par
+
+    EEG-MI calibration per session requires 15--30 minutes of repetitive trials, which limits real-world scalability despite over 70\% success in the experimental environment.\cite{Giles2022,Kueper2024} This limitation arises from changes in brain signals between sessions and across different individuals,\cite{Sugiyama2008} the need for human supervision,\cite{Giles2022} and reliance on specific infrastructure.\cite{Lotte2018}
+
 %------------------------------------%
 
 
@@ -141,6 +168,18 @@
     To achieve the stated aim, the project will pursue the following objectives:
 \section{Project Scope}
 
+
+
+
+
+
+
+%------------ REFERENCES ------------%
 \newpage
-\chapter{ba asndjsadnjasdn}
+
+\chapter*{References}
+\renewcommand{\bibname}{\vspace{-1cm}}
+\bibliographystyle{apalike}
+\bibliography{references}
+
 \end{document}
