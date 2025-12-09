@@ -159,7 +159,7 @@
     \section{The Neuroscience of Motor Imagery}
     To interpret human intention, we must examine the concept of functional 
     equivalence. Modern research has shown that planning a movement and 
-    physically performing it are not distinct processes. When a person performs 
+    physically performing it are not distinct processes \cite{Jeannerod1994}. When a person performs 
     Motor Imagery, mentally imagining a movement while remaining physically 
     still, their brain activates many of the same neural networks used during 
     actual execution.
@@ -168,14 +168,14 @@
     motor cortex generates specific, rhythmic electrical patterns. These patterns 
     occur in the sensorimotor cortex and are governed by the contralateral 
     principle: imagining a right-hand movement primarily activates the left 
-    hemisphere, while left-hand imagery activates the right.
+    hemisphere, while left-hand imagery activates the right \cite{Pfurtscheller2001}.
 
     These activations are measurable through changes in brain rhythms. In a 
     resting state, neurons fire in synchrony, creating strong idle rhythms known 
     as Mu (8–13 Hz) and Beta (13–30 Hz). When the user begins imagining movement, 
     this synchrony is disrupted, causing a power drop known as Event-Related 
     Desynchronisation (ERD). Conversely, when the brain relaxes, the neurons 
-    synchronise again, leading to Event-Related Synchronisation (ERS).
+    synchronise again, leading to Event-Related Synchronisation (ERS) \cite{Pfurtscheller2001}.
 
     These ERD/ERS patterns are the core signatures BCI systems are trained to 
     recognise. While they are highly reproducible and occur even in individuals 
@@ -203,7 +203,7 @@
     drifts. Following this, spatial filtering is used to boost the signal-to-noise 
     ratio. This mathematically separates mixed signals from multiple electrodes, 
     isolating activity from the sensorimotor cortex while suppressing noise from 
-    unrelated brain regions.
+    unrelated brain regions \cite{Pfurtscheller2001}.
   
     The next stage is feature extraction. The well-known algorithm for 
     this is Common Spatial Patterns (CSP). CSP functions like a sophisticated 
@@ -211,14 +211,14 @@
     Its goal is to find a specific blend that maximises the variance of signal 
     power for one task (e.g., right hand) while minimising it for another. This 
     transforms complex biological signals into separable features, simplifying 
-    the prediction task for the computer.
+    the prediction task for the computer \cite{Blankertz2008}.
 
 
     % 2.3 Classification Strategies
     \section{Classification Strategies}
     Once features are extracted, they are fed into a classifier to determine the 
     user's intent. For years, Linear Discriminant Analysis (LDA) and Support 
-    Vector Machines (SVM) have been the standard classifiers. They remain popular 
+    Vector Machines (SVM) have been the standard classifiers \cite{Lotte2018}. They remain popular 
     due to their computational efficiency on small datasets, 
     making them ideal for real-time applications.
 
@@ -260,7 +260,7 @@
     Instead of abstract cues, users interact with compelling elements, such as 
     controlling a race car. Research confirms that this approach improves signal 
     quality, when a user is motivated and enters a flow state, their attention 
-    focuses, producing more pronounced ERD/ERS patterns.
+    focuses, producing more pronounced ERD/ERS patterns \cite{Skola2019,Atilla2024}.
 
     However, the application of gamification remains uneven. While the training
     phase has evolved, the critical calibration phase often retains rigid, 
@@ -426,7 +426,7 @@
     
     Technically, Common Spatial Patterns (CSP) and Linear Discriminant Analysis 
     (LDA) are selected because they are well-documented and computationally 
-    light. This minimises the risk of technical failure during the implementation 
+    light \cite{Lotte2018}. This minimises the risk of technical failure during the implementation 
     phase, ensuring the requirements are suitable for an individual project.
 
     % 4.3 Project Timeline
