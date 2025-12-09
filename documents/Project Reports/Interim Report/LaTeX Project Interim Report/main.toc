@@ -2,10 +2,26 @@
 \contentsline {section}{\numberline {1.1}Background and Significance}{1}{}%
 \contentsline {section}{\numberline {1.2}Current State and Limitations}{1}{}%
 \contentsline {section}{\numberline {1.3}Problem Statement}{2}{}%
-\contentsline {chapter}{\numberline {2.0}Review of Existing Knowledge}{2}{}%
-\contentsline {section}{\numberline {2.1}Critical Analysis and Gap Identification}{2}{}%
-\contentsline {section}{\numberline {2.2}Project Justification}{3}{}%
-\contentsline {chapter}{\numberline {3.0}Project Aims, Objectives, and Scope}{3}{}%
-\contentsline {section}{\numberline {3.1}Project Aims}{3}{}%
-\contentsline {section}{\numberline {3.2}Project Objectives}{3}{}%
-\contentsline {section}{\numberline {3.3}Project Scope}{3}{}%
+\contentsline {chapter}{\numberline {2.0}REVIEW OF EXISTING KNOWLEDGE}{2}{}%
+\contentsline {section}{\numberline {2.1}The Neuroscience of Motor Imagery}{2}{}%
+\contentsline {section}{\numberline {2.2}The EEG Processing Pipeline}{3}{}%
+\contentsline {section}{\numberline {2.3}Classification Strategies}{4}{}%
+\contentsline {section}{\numberline {2.4}The Calibration Bottleneck}{4}{}%
+\contentsline {section}{\numberline {2.5}Gamification in BCI}{4}{}%
+\contentsline {section}{\numberline {2.6}Critical Analysis and Project Justification}{5}{}%
+\contentsline {chapter}{\numberline {3.0}PROJECT AIMS, OBJECTIVES, AND SCOPE}{5}{}%
+\contentsline {section}{\numberline {3.1}Project Aim}{5}{}%
+\contentsline {section}{\numberline {3.2}Project Objectives}{6}{}%
+\contentsline {section}{\numberline {3.3}Project Scope}{6}{}%
+\contentsline {chapter}{\numberline {4.0}PRODUCT DESIGN}{7}{}%
+\contentsline {section}{\numberline {4.1}Design and Methods}{7}{}%
+\contentsline {subsection}{\numberline {4.1.1}Phase 1: System Development}{7}{}%
+\contentsline {subsection}{\numberline {4.1.2}Phase 2: User Evaluation}{8}{}%
+\contentsline {section}{\numberline {4.2}Justification of Methods}{8}{}%
+\contentsline {section}{\numberline {4.3}Project Timeline}{8}{}%
+\contentsline {chapter}{\numberline {5.0}FEASIBILITY, RISKS, AND ETHICAL CONSIDERATIONS}{9}{}%
+\contentsline {section}{\numberline {5.1}Feasibility and Resources}{9}{}%
+\contentsline {subsection}{\numberline {5.1.1}Project Feasibility}{9}{}%
+\contentsline {subsection}{\numberline {5.1.2}Required Resources}{9}{}%
+\contentsline {section}{\numberline {5.2}Risks and Mitigation}{9}{}%
+\contentsline {section}{\numberline {5.3}Ethical Considerations}{10}{}%
