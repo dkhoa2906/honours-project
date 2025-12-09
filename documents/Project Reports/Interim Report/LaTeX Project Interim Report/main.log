@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  9 DEC 2025 18:09
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  9 DEC 2025 20:25
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -515,7 +515,7 @@ File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 [6]
 Chapter 4.0.
 LaTeX Font Info:    Font shape `TU/Arial(0)/m/it' will be
-(Font)              scaled to size 10.95pt on input line 376.
+(Font)              scaled to size 10.95pt on input line 375.
 
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
@@ -530,32 +530,32 @@ Chapter 5.0.
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [8]
-Underfull \hbox (badness 10000) in paragraph at lines 509--509
+Underfull \hbox (badness 10000) in paragraph at lines 508--508
 []|\TU/Arial(0)/m/n/10.95 Dry sensors have high
  []
 
 
-Underfull \hbox (badness 6641) in paragraph at lines 515--515
+Underfull \hbox (badness 6641) in paragraph at lines 514--514
 []|\TU/Arial(0)/m/n/10.95 Adaptive algorithm is too
  []
 
 
-Underfull \hbox (badness 2608) in paragraph at lines 517--519
+Underfull \hbox (badness 2608) in paragraph at lines 516--518
 []|\TU/Arial(0)/m/n/10.95 Focus on the comparative study
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 522--522
+Underfull \hbox (badness 10000) in paragraph at lines 521--521
 []|\TU/Arial(0)/m/n/10.95 BCI Illiteracy ($\OMS/cmsy/m/n/10.95 ^^X$\TU/Arial(0)/m/n/10.95 20% of
  []
 
 
-Underfull \hbox (badness 1231) in paragraph at lines 524--525
+Underfull \hbox (badness 1231) in paragraph at lines 523--524
 []|\TU/Arial(0)/m/n/10.95 Screen participants; exclude non-
  []
 
 
-Overfull \hbox (31.69432pt too wide) in paragraph at lines 497--528
+Overfull \hbox (31.69432pt too wide) in paragraph at lines 496--527
  [][] 
  []
 
@@ -563,12 +563,12 @@ Overfull \hbox (31.69432pt too wide) in paragraph at lines 497--528
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 
-Overfull \hbox (6.48909pt too wide) in paragraph at lines 532--533
+Overfull \hbox (6.48909pt too wide) in paragraph at lines 531--532
 \TU/Arial(0)/m/n/10.95 The project adheres to Ethical Application Number 13740. Participants (18+, non-vulnerable)
  []
 
 
-Overfull \hbox (1.1494pt too wide) in paragraph at lines 532--533
+Overfull \hbox (1.1494pt too wide) in paragraph at lines 531--532
 \TU/Arial(0)/m/n/10.95 provide informed consent. Data is anonymized, stored on University One Drive, and deleted
  []
 

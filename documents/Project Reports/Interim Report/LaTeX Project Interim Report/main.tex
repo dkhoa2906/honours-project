@@ -2,7 +2,7 @@
 
 %-------------------------------------%
 % Birmingham City University
-% Joint Program with University of Information Technology, VNU-HCM
+% Joint Programme with University of Information Technology, VNU-HCM
 % Module: Individual Honours Project
 %
 % -----
@@ -130,7 +130,7 @@
 
     The repetitive and cognitively demanding nature of EEG-MI makes it challenging to 
     implement outside controlled laboratory settings \cite{Xu2024}. It is time-consuming, 
-    requires dedicated human supervision, and depends on specialised lab facilities - which is
+    requires dedicated human supervision, and depends on specialised lab facilities - which are
     often geographically distant. It also induces cognitive fatigue, degrades signal 
     quality over time, and limits practicality for multi-session applications like 
     rehabilitation \cite{Xu2024}. Consequently, despite decades of research, this 
@@ -256,7 +256,7 @@
     % 2.5 Gamification in BCI
     \section{Gamification in BCI}
     Gamification applies game-design elements to non-game contexts to enhance 
-    motivation. In BCI, this is typically utilized during Neurofeedback training. 
+    motivation. In BCI, this is typically utilised during Neurofeedback training. 
     Instead of abstract cues, users interact with compelling elements, such as 
     controlling a race car. Research confirms that this approach improves signal 
     quality, when a user is motivated and enters a flow state, their attention 
@@ -272,7 +272,7 @@
     directly to the calibration phase, it is theoretically possible to collect 
     high-quality data. This would transform calibration from a 
     tedious setup barrier into a seamless part of the user experience. However, 
-    game designing process is critical. If a game is visually chaotic, it may 
+    game design process is critical. If a game is visually chaotic, it may 
     generate interfering 
     signals. The design must balance engagement with signal purity.
 
@@ -281,8 +281,7 @@
     \section{Critical Analysis and Project Justification}
     This review reveals a contradiction in BCI research: theoretical foundations 
     are strong, but practical application is limited by the calibration bottleneck. 
-    Mathematical solutions like Transfer Learning address the lack of data other 
-    than
+    Mathematical solutions like Transfer Learning address the lack of data but
     struggle with biological non-stationarity. Conversely, gamification improves 
     signal quality but is rarely applied to the calibration phase itself.
 
@@ -348,7 +347,7 @@
     The project boundaries are defined to ensure the feasibility of the 
     comparative study within the academic timeline.
     
-    \textbf{Included:}
+    \textbf{In-Scope:}
     \begin{itemize}
         \item Development of the Python-based signal processing backend (preprocessing, feature extraction).
         \item Design of a 2D/3D game environment (e.g., GameMaker or PyGame) specifically for Motor Imagery tasks.
@@ -356,7 +355,7 @@
         \item Statistical analysis of user fatigue metrics and classification accuracy.
     \end{itemize}
     
-    \textbf{Excluded:}
+    \textbf{Out-of-Scope:}
     \begin{itemize}
         \item Hardware engineering (no sensor modification or headset construction).
         \item Advanced Deep Learning models (focus remains on CSP+LDA for real-time feasibility).
@@ -397,7 +396,7 @@
     
     Third, we implement the Adaptive Learning Layer, which is the 
     advanced component of the system. Unlike basic BCI games that just read 
-    signals, this smart module runs in the background to analyze the labeled 
+    signals, this smart module runs in the background to analyse the labeled 
     data segments from the game. It uses this data to mathematically retrain 
     the computer instantly, allowing the system to adapt to the user's unique 
     brain patterns automatically without stopping the gameplay.
@@ -427,8 +426,8 @@
     
     Technically, Common Spatial Patterns (CSP) and Linear Discriminant Analysis 
     (LDA) are selected because they are well-documented and computationally 
-    light. This minimizes the risk of technical failure during the implementation 
-    phase, ensuring the requirements suitable with an individual project.
+    light. This minimises the risk of technical failure during the implementation 
+    phase, ensuring the requirements are suitable for an individual project.
 
     % 4.3 Project Timeline
     \section{Project Timeline}
@@ -478,7 +477,7 @@
 
             \item \textbf{Infrastructure \& Environment:} 
             \begin{itemize}
-                \item \textbf{Testing Environment:} A quiet, isolated room to minimize external signal artifacts and distraction during data collection.
+                \item \textbf{Testing Environment:} A quiet, isolated room to minimize external signal artefacts and distraction during data collection.
                 \item \textbf{Storage:} Access to University One Drive and secure servers for ethical data management.
             \end{itemize}
         \end{itemize}
@@ -508,7 +507,7 @@
             \textbf{Technical} & 
             Dry sensors have high noise/impedance. & 
             High & 
-            Implement strict artifact removal (8-30Hz) and stillness mechanics. \\ 
+            Implement strict artefact removal (8-30Hz) and stillness mechanics. \\ 
             \addlinespace
             
             \textbf{Project Scope} & 
