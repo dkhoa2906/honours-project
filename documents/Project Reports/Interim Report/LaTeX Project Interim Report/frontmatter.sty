@@ -86,6 +86,10 @@
 \setlength{\cftbeforechapskip}{12pt} % Space before chapter entries
 \setlength{\cftbeforesecskip}{6pt} % Space before section entries
 
+\renewcommand{\cftsubsecfont}{} % Font for subsection entries
+\renewcommand{\cftsubsecpagefont}{} % Font for subsection page numbers
+\renewcommand{\cftsubsecnumwidth}{1cm}
+\setlength{\cftbeforesubsecskip}{4pt} % Space before subsection entries
 
 % List of Figures
 \newcommand{\reportListOfFigures}{
@@ -99,6 +103,7 @@
 \renewcommand{\cftafterloftitle}{\hfill} % Remove default centering
 \renewcommand{\cftfigfont}{\normalfont} % Normal font for figure entries
 \renewcommand{\cftfigpagefont}{\normalfont} % Normal font for figure page numbers
+\renewcommand{\cftfignumwidth}{1.2cm} % Width for figure numbers
 
 % List of Tables
 \newcommand{\reportListOfTables}{
@@ -112,4 +117,5 @@
 \renewcommand{\cftafterlottitle}{\hfill} % Remove default centering
 \renewcommand{\cfttabfont}{\normalfont} % Normal font for table entries
 \renewcommand{\cfttabpagefont}{\normalfont} % Normal font for table page numbers
+\renewcommand{\cfttabnumwidth}{1.2cm} % Width for table numbers
 

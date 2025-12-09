@@ -19,6 +19,7 @@
 \RequirePackage{titlesec}
 \RequirePackage{microtype} % Better justification and typography
 \RequirePackage{setspace} % Line spacing control
+\RequirePackage{enumitem} % List customization
 
 % Prevent chapters from starting on a new page
 \makeatletter
@@ -45,15 +46,19 @@
     {\thesection}{5pt}{}
     \titlespacing*{\section}{0pt}{10pt}{0pt}
 
-% Subsection formatting: Italic, 1-line space above and below
+% Subsection formatting: Italic, adjustable space above and below
 \titleformat{\subsection}
     {\normalfont\normalsize\itshape\raggedright} 
     {\thesubsection} % Label
-    {1pt} % Sep
+    {4pt} % Sep (width between number and caption - adjust as needed)
     {} % Before-code
 \titlespacing*{\subsection}
     {0pt} % Left
-    {0pt} % Before (1-line space)
-    {0pt} % After (1-line space)
+    {2pt} % Before (space above subsection)
+    {-4pt} % After (space below subsection)
+
+% List spacing: Compact formatting
+\setlist[itemize]{itemsep=2pt, parsep=0pt, topsep=1pt}
+\setlist[enumerate]{itemsep=4pt, parsep=0pt, topsep=0pt}
 
 

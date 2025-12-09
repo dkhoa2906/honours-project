@@ -16,12 +16,12 @@
 \contentsline {chapter}{\numberline {4.0}PRODUCT DESIGN}{7}{}%
 \contentsline {section}{\numberline {4.1}Design and Methods}{7}{}%
 \contentsline {subsection}{\numberline {4.1.1}Phase 1: System Development}{7}{}%
-\contentsline {subsection}{\numberline {4.1.2}Phase 2: User Evaluation}{8}{}%
+\contentsline {subsection}{\numberline {4.1.2}Phase 2: User Evaluation}{7}{}%
 \contentsline {section}{\numberline {4.2}Justification of Methods}{8}{}%
 \contentsline {section}{\numberline {4.3}Project Timeline}{8}{}%
-\contentsline {chapter}{\numberline {5.0}FEASIBILITY, RISKS, AND ETHICAL CONSIDERATIONS}{9}{}%
-\contentsline {section}{\numberline {5.1}Feasibility and Resources}{9}{}%
-\contentsline {subsection}{\numberline {5.1.1}Project Feasibility}{9}{}%
+\contentsline {chapter}{\numberline {5.0}FEASIBILITY, RISKS, AND ETHICAL CONSIDERATIONS}{8}{}%
+\contentsline {section}{\numberline {5.1}Feasibility and Resources}{8}{}%
+\contentsline {subsection}{\numberline {5.1.1}Project Feasibility}{8}{}%
 \contentsline {subsection}{\numberline {5.1.2}Required Resources}{9}{}%
 \contentsline {section}{\numberline {5.2}Risks and Mitigation}{9}{}%
 \contentsline {section}{\numberline {5.3}Ethical Considerations}{10}{}%
