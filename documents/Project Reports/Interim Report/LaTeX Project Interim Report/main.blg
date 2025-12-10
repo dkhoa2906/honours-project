@@ -3,9 +3,10 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: main.aux
 The style file: apalike.bst
 Database file #1: references.bib
+Warning--I didn't find a database entry for "Pfurtscheller2001"
 You've used 18 entries,
             1935 wiz_defined-function locations,
-            607 strings with 6993 characters,
+            610 strings with 7028 characters,
 and the built_in function-call counts, 7840 in all, are:
 = -- 757
 > -- 366
@@ -44,3 +45,4 @@ warning$ -- 0
 while$ -- 63
 width$ -- 0
 write$ -- 236
+(There was 1 warning)

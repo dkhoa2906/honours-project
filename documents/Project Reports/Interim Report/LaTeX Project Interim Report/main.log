@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  9 DEC 2025 21:21
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025/Homebrew) (preloaded format=xelatex 2025.11.7)  9 DEC 2025 21:53
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -496,6 +496,9 @@ File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 ]
 Chapter 2.0.
 
+Package natbib Warning: Citation `Pfurtscheller2001' on page 2 undefined on input line 177.
+
+
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
@@ -507,6 +510,10 @@ File: Images/neuroscience-of-motor-imagery.pdf Graphic file (type pdf)
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [3]
+
+Package natbib Warning: Citation `Pfurtscheller2001' on page 4 undefined on input line 241.
+
+
 
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
@@ -604,6 +611,10 @@ File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [11])
 
+Package natbib Warning: There were undefined citations.
+
+
+
 File: ./Logo/bcu-logo.pdf Graphic file (type pdf)
 <use ./Logo/bcu-logo.pdf>
 [12] (./main.aux)
@@ -614,8 +625,8 @@ L3 programming layer <2025-01-18>
  ) 
 Here is how much of TeX's memory you used:
  8154 strings out of 473832
- 185584 string characters out of 5720759
- 654064 words of memory out of 5000000
+ 185599 string characters out of 5720759
+ 654062 words of memory out of 5000000
  31123 multiletter control sequences out of 15000+600000
  561768 words of font info for 69 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
