@@ -1,0 +1,121 @@
+%-------------------------------------%
+% Birmingham City University
+% Joint Program with University of Information Technology, VNU-HCM
+% Module: Individual Honours Project
+% 
+% -----
+%
+% A Game-Based Approach to Motor Imagery Adaptation and BCI Calibration
+% Author: Cao Đăng Khoa (dang.cao@mail.bcu.ac.uk)
+% Student ID: 25195675
+%
+% Supervisor: Dr. Vi Chí Thành (vcthanh@hcmiu.edu.vn)
+%------------------------------------%
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{frontmatter}[2025/12/01 v1.0 Honours Project Report Front Matter]
+
+
+\RequirePackage{graphicx}
+\RequirePackage{dashrule}
+\RequirePackage{tocloft}
+
+% Title section command
+\newcommand{\reportTitle}[2]{
+    \begin{center}
+    \vspace*{2cm}
+    
+    \hdashrule{\textwidth}{1.5pt}{9pt} 
+    \vspace{1.5cm}
+    
+    {\fontsize{20}{24}\selectfont\bfseries CMP6200\par}
+    \vspace{0.3cm}
+
+    {\fontsize{20}{24}\selectfont\bfseries Individual Undergraduate Project\par}
+    \vspace{0.3cm}
+
+    {\fontsize{20}{24}\selectfont\bfseries #1\par}
+    \vspace{0.3cm}
+    
+    {\fontsize{20}{24}\selectfont\bfseries #2\par}
+    
+    \vspace{1.8cm}
+    \hdashrule{\textwidth}{1.5pt}{9pt}
+    \vspace{1.5cm}
+    \end{center}
+}
+
+% Student info section command
+\newcommand{\reportCredit}[5]{
+    \begin{flushleft}
+        {\fontsize{16.2}{18}\selectfont\bfseries Student Name:} {\fontsize{15.7}{18}\selectfont #1}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Student ID:} {\fontsize{15.7}{18}\selectfont #2}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Course:} {\fontsize{15.7}{18}\selectfont #3}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Supervisor:} {\fontsize{15.7}{18}\selectfont #4}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Date:} {\fontsize{15.7}{18}\selectfont\ #5}\par
+    \end{flushleft}
+    
+}
+
+% Combined command 
+\newcommand{\reportTitlePage}[7]{
+    \reportTitle{#1}{#2}
+    \reportCredit{#3}{#4}{#5}{#6}{#7}
+}
+
+% Table of Contents
+\newcommand{\reportTableOfContents}{
+    \newpage
+    \vspace*{-2.1cm}
+    \tableofcontents
+    \thispagestyle{fancy}
+}
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\cfttoctitlefont}{\bfseries\raggedright} % Bold, left-aligned title
+\renewcommand{\cftaftertoctitle}{\hfill\vspace{-1.4cm}} % Remove default centering
+\renewcommand{\cftchapfont}{\bfseries} % Bold chapter entries
+\renewcommand{\cftchappagefont}{\bfseries} % Bold chapter page numbers
+\renewcommand{\cftchapnumwidth}{0.7cm} % Increase width for chapter numbers (adjust value as needed)
+\renewcommand{\cftsecfont}{} % Bold section entries
+\renewcommand{\cftsecpagefont}{} % Bold section page numbers
+\setlength{\cftbeforechapskip}{12pt} % Space before chapter entries
+\setlength{\cftbeforesecskip}{6pt} % Space before section entries
+
+\renewcommand{\cftsubsecfont}{} % Font for subsection entries
+\renewcommand{\cftsubsecpagefont}{} % Font for subsection page numbers
+\renewcommand{\cftsubsecnumwidth}{1cm}
+\setlength{\cftbeforesubsecskip}{4pt} % Space before subsection entries
+
+% List of Figures
+\newcommand{\reportListOfFigures}{
+    \newpage
+    \vspace*{-2.1cm}
+    \listoffigures
+    \thispagestyle{fancy}
+}
+\renewcommand{\listfigurename}{List of Figures}
+\renewcommand{\cftloftitlefont}{\bfseries\raggedright} % Bold, left-aligned title
+\renewcommand{\cftafterloftitle}{\hfill} % Remove default centering
+\renewcommand{\cftfigfont}{\normalfont} % Normal font for figure entries
+\renewcommand{\cftfigpagefont}{\normalfont} % Normal font for figure page numbers
+\renewcommand{\cftfignumwidth}{1.2cm} % Width for figure numbers
+
+% List of Tables
+\newcommand{\reportListOfTables}{
+    \newpage
+    \vspace*{-2.1cm}
+    \listoftables
+    \thispagestyle{fancy}
+}
+\renewcommand{\listtablename}{List of Tables}
+\renewcommand{\cftlottitlefont}{\bfseries\raggedright} % Bold, left-aligned title
+\renewcommand{\cftafterlottitle}{\hfill} % Remove default centering
+\renewcommand{\cfttabfont}{\normalfont} % Normal font for table entries
+\renewcommand{\cfttabpagefont}{\normalfont} % Normal font for table page numbers
+\renewcommand{\cfttabnumwidth}{1.2cm} % Width for table numbers
+
