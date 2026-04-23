@@ -1,0 +1,25 @@
+{
+    "cortex_api": {
+        "client_id": "",
+        "client_secret": ""
+    },
+    "preprocessing": {
+        "sampling_rate": 128
+    },
+    "recording": {
+        "trial_seconds": 4.0,
+        "prepare_seconds": 1.0,
+        "rest_seconds": 2.5,
+        "break_seconds": 30,
+        "n_blocks": 6,
+        "trials_per_block": 10,
+        "labels": ["Left Hand", "Rest", "Right Hand"],
+        "colors": {
+            "Left Hand":  "#4169E1",
+            "Right Hand": "#DC143C",
+            "Rest":       "#2E8B57"
+        },
+        "save_path": "recordings",
+        "simulation_mode": true
+    }
+}
