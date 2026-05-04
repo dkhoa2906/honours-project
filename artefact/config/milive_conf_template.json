@@ -1,0 +1,25 @@
+{
+    "cortex_api": {
+        "client_id": "",
+        "client_secret": ""
+    },
+    "preprocessing": {
+        "sampling_rate": 128
+    },
+    "model": {
+        "n_channels": 14
+    },
+     "live": {
+        "simulation_mode": true,
+        "model_path": "model/weights/eegnet_finetuned_mimed.pth",
+        "step_samples": 64,
+        "n_outputs": 2,
+        "confidence_threshold": 0.5,
+        "classes": ["Left Hand", "Right Hand"],
+        "colors": {
+            "Left Hand":  "#4169E1",
+            "Right Hand": "#DC143C",
+            "Rest":       "#808080"
+        }
+    }
+}

@@ -1,0 +1,9 @@
+config/datacollect_conf.json
+config/milive_conf.json
+config/server_conf.json
+
+
+__pycache__
+.vscode
+
+recordings/

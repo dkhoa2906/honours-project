@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCG Rhythm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Inter',sans-serif;}
+canvas{display:block;margin:0 auto;}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;}
+#ui button,[data-interactive]{pointer-events:auto;}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;transition:opacity 0.4s ease;}
+.screen.hidden{opacity:0;pointer-events:none;}
+
+/* ── TITLE ── */
+#screen-title{background:linear-gradient(180deg,#0d0d2a 0%,#000 100%);gap:0;}
+.title-logo{font-family:'Orbitron',sans-serif;font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:0.2em;
+  background:linear-gradient(135deg,#00e5ff,#e040fb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 30px rgba(0,229,255,0.4));margin-bottom:0.2em;}
+.title-sub{font-family:'Orbitron',sans-serif;font-size:clamp(0.65rem,1.8vw,0.95rem);letter-spacing:0.3em;color:#4a4a7a;margin-bottom:2.5rem;}
+
+/* mode selector cards */
+.mode-cards{display:flex;gap:1.5rem;margin-bottom:2rem;}
+.mode-card{width:200px;padding:1.5rem 1rem;border-radius:8px;cursor:pointer;text-align:center;transition:all 0.25s;
+  border:2px solid transparent;background:rgba(255,255,255,0.04);position:relative;overflow:hidden;}
+.mode-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;}
+.mode-card.collect{border-color:#00e5ff33;}
+.mode-card.collect::before{background:rgba(0,229,255,0.06);}
+.mode-card.collect:hover,.mode-card.collect.selected{border-color:#00e5ff;box-shadow:0 0 24px rgba(0,229,255,0.25);}
+.mode-card.collect:hover::before,.mode-card.collect.selected::before{opacity:1;}
+.mode-card.test{border-color:#e040fb33;}
+.mode-card.test::before{background:rgba(224,64,251,0.06);}
+.mode-card.test:hover,.mode-card.test.selected{border-color:#e040fb;box-shadow:0 0 24px rgba(224,64,251,0.25);}
+.mode-card.test:hover::before,.mode-card.test.selected::before{opacity:1;}
+.mode-icon{font-size:2rem;margin-bottom:0.75rem;}
+.mode-name{font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;margin-bottom:0.5rem;}
+.mode-card.collect .mode-name{color:#00e5ff;}
+.mode-card.test .mode-name{color:#e040fb;}
+.mode-desc{font-size:0.72rem;color:#666;line-height:1.5;}
+.mode-card.selected .mode-desc{color:#999;}
+
+.title-note{color:#2a2a4a;font-size:0.7rem;margin-top:1.5rem;letter-spacing:0.1em;}
+.ws-row{display:flex;align-items:center;gap:0.5rem;margin-top:1rem;}
+.ws-input{background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;color:#aaa;
+  font-family:'Inter',sans-serif;font-size:0.78rem;padding:0.4rem 0.75rem;width:210px;outline:none;}
+.ws-input:focus{border-color:#555;}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:#444;flex-shrink:0;transition:background 0.3s;}
+.ws-dot.connected{background:#00e5ff;box-shadow:0 0 8px #00e5ff;}
+.ws-dot.error{background:#ff4466;}
+.ws-label{font-size:0.7rem;color:#555;letter-spacing:0.05em;}
+
+/* ── BUTTONS ── */
+.btn-primary{font-family:'Orbitron',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.15em;
+  padding:0.9rem 2.5rem;border:2px solid #00e5ff;background:transparent;color:#00e5ff;cursor:pointer;
+  border-radius:4px;transition:all 0.2s;position:relative;overflow:hidden;}
+.btn-primary::before{content:'';position:absolute;inset:0;background:#00e5ff;opacity:0;transition:opacity 0.2s;}
+.btn-primary:hover{color:#000;box-shadow:0 0 30px rgba(0,229,255,0.5);}
+.btn-primary:hover::before{opacity:1;}
+.btn-primary span{position:relative;z-index:1;}
+.btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-primary:disabled:hover::before{opacity:0;}
+.btn-primary:disabled:hover{color:#00e5ff;box-shadow:none;}
+
+.btn-secondary{font-family:'Orbitron',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.12em;
+  padding:0.65rem 1.5rem;border:1px solid #333;background:transparent;color:#666;cursor:pointer;
+  border-radius:4px;transition:all 0.2s;}
+.btn-secondary:hover{border-color:#555;color:#aaa;}
+
+/* ── TUTORIAL ── */
+#screen-tutorial{background:rgba(0,0,0,0.96);gap:1.5rem;padding:2rem;}
+.tut-mode-badge{font-family:'Orbitron',sans-serif;font-size:0.65rem;letter-spacing:0.2em;padding:0.3rem 1rem;
+  border-radius:20px;margin-bottom:0.5rem;}
+.tut-mode-badge.collect{border:1px solid #00e5ff44;color:#00e5ff;background:rgba(0,229,255,0.08);}
+.tut-mode-badge.test{border:1px solid #e040fb44;color:#e040fb;background:rgba(224,64,251,0.08);}
+.tut-title{font-family:'Orbitron',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:0.1em;}
+.tut-lanes{display:flex;gap:3rem;margin:0.75rem 0;}
+.tut-lane{display:flex;flex-direction:column;align-items:center;gap:0.75rem;}
+.tut-tile{width:80px;height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;}
+.tut-tile.left{background:rgba(0,229,255,0.15);border:2px solid #00e5ff;color:#00e5ff;box-shadow:0 0 20px rgba(0,229,255,0.3);}
+.tut-tile.right{background:rgba(224,64,251,0.15);border:2px solid #e040fb;color:#e040fb;box-shadow:0 0 20px rgba(224,64,251,0.3);}
+.tut-label{font-size:0.78rem;color:#888;text-align:center;max-width:120px;line-height:1.5;}
+.tut-desc{color:#aaa;font-size:0.85rem;text-align:center;max-width:480px;line-height:1.7;}
+.tut-desc em{color:#fff;font-style:normal;font-weight:600;}
+.tut-steps{display:flex;flex-direction:column;gap:0.5rem;max-width:400px;width:100%;}
+.tut-step{display:flex;align-items:flex-start;gap:0.75rem;font-size:0.78rem;color:#888;line-height:1.5;}
+.tut-step-num{font-family:'Orbitron',sans-serif;font-size:0.65rem;font-weight:700;color:#00e5ff;
+  width:20px;height:20px;border-radius:50%;border:1px solid #00e5ff44;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+
+/* ── CALIBRATING OVERLAY ── */
+#screen-calibrating{background:rgba(0,0,0,0.97);gap:1.5rem;}
+.cal-spinner{width:56px;height:56px;border:3px solid #111;border-top:3px solid #00e5ff;border-radius:50%;
+  animation:spin 0.9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cal-title{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:#fff;letter-spacing:0.1em;}
+.cal-sub{font-size:0.8rem;color:#555;letter-spacing:0.05em;text-align:center;max-width:320px;line-height:1.6;}
+.cal-progress-wrap{width:280px;height:3px;background:#111;border-radius:2px;overflow:hidden;}
+.cal-progress-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e040fb);width:0%;transition:width 0.5s;}
+
+/* ── RESULT ── */
+#screen-result{background:linear-gradient(180deg,#0d0d2a 0%,#000 100%);gap:1.25rem;}
+.result-title{font-family:'Orbitron',sans-serif;font-size:1.8rem;color:#fff;letter-spacing:0.15em;}
+.result-mode-badge{font-family:'Orbitron',sans-serif;font-size:0.6rem;letter-spacing:0.2em;padding:0.25rem 0.75rem;
+  border-radius:20px;}
+.result-mode-badge.collect{border:1px solid #00e5ff44;color:#00e5ff;background:rgba(0,229,255,0.08);}
+.result-mode-badge.test{border:1px solid #e040fb44;color:#e040fb;background:rgba(224,64,251,0.08);}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:320px;}
+.result-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.9rem;text-align:center;}
+.result-val{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:700;color:#00e5ff;}
+.result-val.test-val{color:#e040fb;}
+.result-key{font-size:0.65rem;color:#555;letter-spacing:0.1em;margin-top:0.2rem;}
+.result-export{font-size:0.72rem;color:#333;margin-top:0.25rem;}
+.result-actions{display:flex;gap:0.75rem;margin-top:0.5rem;}
+.btn-export{font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.1em;
+  padding:0.6rem 1.2rem;border:1px solid #00e5ff66;background:transparent;color:#00e5ff99;cursor:pointer;
+  border-radius:4px;transition:all 0.2s;}
+.btn-export:hover{border-color:#00e5ff;color:#00e5ff;box-shadow:0 0 16px rgba(0,229,255,0.2);}
+
+/* ── HUD ── */
+#hud{position:fixed;top:0;left:0;right:0;padding:0.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;z-index:15;pointer-events:none;}
+#hud-score{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
+#hud-center{display:flex;flex-direction:column;align-items:center;gap:0.1rem;}
+#hud-mode-tag{font-family:'Orbitron',sans-serif;font-size:0.55rem;letter-spacing:0.18em;padding:0.15rem 0.6rem;border-radius:10px;}
+#hud-mode-tag.collect{border:1px solid #00e5ff55;color:#00e5ff99;}
+#hud-mode-tag.test{border:1px solid #e040fb55;color:#e040fb99;}
+#hud-phase{font-size:0.6rem;color:#444;letter-spacing:0.1em;}
+#hud-combo{font-family:'Orbitron',sans-serif;font-size:1rem;color:#ffd700;font-variant-numeric:tabular-nums;text-align:right;}
+#hud-combo span{font-size:0.6rem;color:#555;display:block;letter-spacing:0.1em;}
+#progress-bar{position:fixed;top:0;left:0;right:0;height:3px;z-index:16;}
+#progress-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e040fb);width:0%;transition:width 0.3s;}
+
+/* ── BCI PREDICTION INDICATOR (test mode) ── */
+#bci-indicator{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif;font-size:0.7rem;letter-spacing:0.15em;
+  padding:0.4rem 1.2rem;border-radius:20px;z-index:15;pointer-events:none;
+  opacity:0;transition:opacity 0.3s;}
+#bci-indicator.left{background:rgba(0,229,255,0.15);border:1px solid #00e5ff66;color:#00e5ff;}
+#bci-indicator.right{background:rgba(224,64,251,0.15);border:1px solid #e040fb66;color:#e040fb;}
+#bci-indicator.show{opacity:1;}
+
+/* ── WS STATUS HUD ── */
+#ws-status{position:fixed;bottom:8px;right:8px;font:10px/1.4 monospace;color:#444;pointer-events:none;z-index:99;text-align:right;}
+
+#debug{position:fixed;bottom:8px;left:8px;font:10px/1.5 monospace;color:#0f0;background:rgba(0,0,0,0.75);padding:3px 7px;pointer-events:none;z-index:99;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     TITLE / MODE SELECT
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-title">
+  <div class="title-logo">BCG</div>
+  <div class="title-sub">BRAIN CALIBRATION GAME</div>
+
+  <div class="mode-cards">
+    <div class="mode-card collect selected" id="card-collect" onclick="selectMode('collect')">
+      <div class="mode-icon">🧠</div>
+      <div class="mode-name">COLLECT</div>
+      <div class="mode-desc">Record labelled EEG trials for calibration. Tiles fall as cues — imagine the movement when each tile hits the line.</div>
+    </div>
+    <div class="mode-card test" id="card-test" onclick="selectMode('test')">
+      <div class="mode-icon">⚡</div>
+      <div class="mode-name">TEST</div>
+      <div class="mode-desc">Play with your calibrated model. The game responds to live BCI predictions from the server.</div>
+    </div>
+  </div>
+
+  <!-- WebSocket config row -->
+  <div class="ws-row">
+    <div class="ws-dot" id="ws-dot"></div>
+    <input class="ws-input" id="ws-url-input" type="text" value="ws://localhost:8765" placeholder="ws://localhost:8765" />
+    <button class="btn-secondary" onclick="connectWS()">CONNECT</button>
+  </div>
+  <div class="ws-label" id="ws-label-text">Not connected · simulation mode active</div>
+
+  <button class="btn-primary" style="margin-top:1.5rem;" id="btn-start" onclick="showTutorial()"><span>START</span></button>
+  <div class="title-note">BCI MOTOR IMAGERY CALIBRATION PROTOTYPE</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TUTORIAL
+══════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-tutorial">
+  <div class="tut-mode-badge collect" id="tut-badge">COLLECT MODE</div>
+  <div class="tut-title" id="tut-title">HOW TO PLAY</div>
+
+  <!-- collect tutorial -->
+  <div id="tut-body-collect">
+    <div class="tut-lanes" style="margin-top:0.75rem;">
+      <div class="tut-lane">
+        <div class="tut-tile left">LEFT</div>
+        <div class="tut-label">Imagine moving your <em style="color:#00e5ff">LEFT hand</em> when the tile reaches the line</div>
+      </div>
+      <div class="tut-lane">
+        <div class="tut-tile right">RIGHT</div>
+        <div class="tut-label">Imagine moving your <em style="color:#e040fb">RIGHT hand</em> when the tile reaches the line</div>
+      </div>
+    </div>
+    <div class="tut-desc">Tiles fall as cues. <em>No need to press keys</em> — perform motor imagery at the moment each tile hits the line.</div>
+    <div class="tut-steps" style="margin-top:0.75rem;">
+      <div class="tut-step"><div class="tut-step-num">1</div><span><em>~1 min</em> — 40 cued trials are collected while you play.</span></div>
+      <div class="tut-step"><div class="tut-step-num">2</div><span><em>Calibration screen</em> — server fine-tunes the model on your data (1–5 min).</span></div>
+      <div class="tut-step"><div class="tut-step-num">3</div><span><em>Interactive phase</em> — tiles now respond to your brain activity in real-time.</span></div>
+    </div>
+    <div class="tut-desc" style="font-size:0.72rem;color:#444;margin-top:0.5rem;">(Prototype: ← → arrow keys simulate MI · touch left/right half of screen)</div>
+  </div>
+
+  <!-- test tutorial -->
+  <div id="tut-body-test" style="display:none;">
+    <div class="tut-desc" style="margin-top:0.5rem;">Your calibrated model is live. <em>Imagine moving left or right</em> — the BCI prediction will trigger the matching tile.</div>
+    <div class="tut-steps" style="margin-top:1rem;">
+      <div class="tut-step"><div class="tut-step-num" style="border-color:#e040fb44;color:#e040fb;">1</div><span>The server streams real-time predictions. Each prediction hits the nearest note in that lane.</span></div>
+      <div class="tut-step"><div class="tut-step-num" style="border-color:#e040fb44;color:#e040fb;">2</div><span>Accuracy shown at the end compares your BCI responses to the expected cue timing.</span></div>
+    </div>
+    <div class="tut-desc" style="font-size:0.72rem;color:#444;margin-top:0.75rem;">(Prototype: ← → arrow keys still work to simulate predictions)</div>
+  </div>
+
+  <button class="btn-primary" style="margin-top:1.25rem;" onclick="startGame()"><span>BEGIN</span></button>
+  <button class="btn-secondary" style="margin-top:0.5rem;" onclick="showTitle()">← BACK</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CALIBRATING OVERLAY (collect mode phase 2)
+══════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-calibrating">
+  <div class="cal-spinner"></div>
+  <div class="cal-title">CALIBRATING</div>
+  <div class="cal-sub" id="cal-sub-text">Sending trial data to server…<br>This may take 1–5 minutes depending on hardware.</div>
+  <div class="cal-progress-wrap"><div class="cal-progress-fill" id="cal-progress-fill"></div></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     RESULT
+══════════════════════════════════════════ -->
+<div class="screen hidden" id="screen-result">
+  <div class="result-title">SESSION COMPLETE</div>
+  <div class="result-mode-badge collect" id="result-badge">COLLECT MODE</div>
+  <div class="result-grid" id="result-grid">
+    <div class="result-card"><div class="result-val" id="r-score">0</div><div class="result-key">SCORE</div></div>
+    <div class="result-card"><div class="result-val" id="r-combo">0</div><div class="result-key">MAX COMBO</div></div>
+    <div class="result-card"><div class="result-val" id="r-trials">0</div><div class="result-key">TRIALS</div></div>
+    <div class="result-card"><div class="result-val" id="r-acc">0%</div><div class="result-key" id="r-acc-label">HIT RATE</div></div>
+  </div>
+  <div class="result-export" id="r-log-hint"></div>
+  <div class="result-actions">
+    <button class="btn-export" id="btn-export-json" onclick="exportJSON()">⬇ EXPORT JSON</button>
+    <button class="btn-primary" onclick="showTitle()"><span>NEW SESSION</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HUD
+══════════════════════════════════════════ -->
+<div id="hud" style="display:none;">
+  <div id="hud-score">000000</div>
+  <div id="hud-center">
+    <div id="hud-mode-tag" class="collect">COLLECT</div>
+    <div id="hud-phase"></div>
+  </div>
+  <div id="hud-combo">0x<span>COMBO</span></div>
+</div>
+<div id="progress-bar" style="display:none;"><div id="progress-fill"></div></div>
+<div id="bci-indicator"></div>
+<div id="ws-status"></div>
+<div id="debug"></div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════════════
+const BPM = 70;
+const BEAT_MS = (60 / BPM) * 1000;
+const APPROACH_TIME = 1600;
+const HIT_WINDOW_PERFECT = 90;
+const HIT_WINDOW_GOOD = 180;
+const CANVAS_W = 420, CANVAS_H = 700;
+const LANE_W = CANVAS_W / 2;
+const HIT_LINE_Y = CANVAS_H * 0.84;
+const NOTE_W = LANE_W * 0.72;
+const NOTE_H = 54;
+
+// EEG config (must match server)
+const SAMPLE_RATE = 128;          // Hz
+const TRIAL_SECONDS = 4.0;        // seconds of EEG per trial
+const TRIAL_SAMPLES = SAMPLE_RATE * TRIAL_SECONDS; // 512
+
+const COLORS = {
+  LEFT:  { tile: '#00e5ff', glow: 'rgba(0,229,255,',  bg: 'rgba(0,229,255,0.08)'  },
+  RIGHT: { tile: '#e040fb', glow: 'rgba(224,64,251,', bg: 'rgba(224,64,251,0.08)' },
+};
+
+const NOTE_CHART = [
+  {b:2,l:'LEFT'},{b:3,l:'RIGHT'},{b:5,l:'LEFT'},{b:6,l:'RIGHT'},
+  {b:8,l:'RIGHT'},{b:9,l:'LEFT'},{b:11,l:'LEFT'},{b:12,l:'RIGHT'},
+  {b:14,l:'RIGHT'},{b:15,l:'LEFT'},{b:17,l:'LEFT'},{b:18,l:'RIGHT'},
+  {b:20,l:'LEFT'},{b:21,l:'RIGHT'},{b:23,l:'RIGHT'},{b:24,l:'LEFT'},
+  {b:26,l:'LEFT'},{b:27,l:'RIGHT'},{b:29,l:'RIGHT'},{b:30,l:'LEFT'},
+  {b:32,l:'RIGHT'},{b:33,l:'LEFT'},{b:35,l:'LEFT'},{b:36,l:'RIGHT'},
+  {b:38,l:'LEFT'},{b:39,l:'RIGHT'},{b:41,l:'RIGHT'},{b:42,l:'LEFT'},
+  {b:44,l:'LEFT'},{b:45,l:'RIGHT'},{b:47,l:'RIGHT'},{b:48,l:'LEFT'},
+  {b:50,l:'LEFT'},{b:51,l:'RIGHT'},{b:53,l:'RIGHT'},{b:54,l:'LEFT'},
+  {b:56,l:'LEFT'},{b:57,l:'RIGHT'},{b:59,l:'LEFT'},{b:60,l:'RIGHT'},
+];
+const TOTAL_NOTES = NOTE_CHART.length;
+
+// ════════════════════════════════════════════════════════════════
+// MODE STATE
+// ════════════════════════════════════════════════════════════════
+// gameMode: 'collect' | 'test'
+// collectPhase: 'collection' | 'calibrating' | 'interactive'
+let gameMode = 'collect';
+let collectPhase = 'collection';  // only used in collect mode
+
+function selectMode(m) {
+  gameMode = m;
+  document.getElementById('card-collect').classList.toggle('selected', m === 'collect');
+  document.getElementById('card-test').classList.toggle('selected', m === 'test');
+}
+
+// ════════════════════════════════════════════════════════════════
+// WEBSOCKET
+// ════════════════════════════════════════════════════════════════
+let ws = null;
+let wsConnected = false;
+
+// Rolling EEG buffer: stores raw samples received from server
+// Each sample is an array of n_channels floats
+let eegBuffer = [];   // array of samples [ [ch0..ch13], ... ]
+
+// Per-note EEG chunks: captured during collect mode
+// Structure: { noteIndex, lane, label, startSample, eegChunk: [[...]] }
+let noteEEGMap = {};  // key = noteIndex, value = accumulated samples
+
+// Active note being recorded (collect phase)
+let recordingNoteIdx = null;
+let recordingStartMs = 0;
+
+function connectWS() {
+  const url = document.getElementById('ws-url-input').value.trim() || 'ws://localhost:8765';
+  if (ws) { ws.close(); ws = null; }
+  setWSDot('connecting');
+  setWSLabel('Connecting…');
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    wsConnected = true;
+    setWSDot('connected');
+    setWSLabel(`Connected · ${url}`);
+  };
+
+  ws.onmessage = (ev) => {
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch(e) { return; }
+    handleServerMessage(msg);
+  };
+
+  ws.onerror = () => {
+    setWSDot('error');
+    setWSLabel('Connection error');
+  };
+
+  ws.onclose = () => {
+    wsConnected = false;
+    setWSDot('off');
+    setWSLabel('Disconnected · simulation mode active');
+    updateWSStatus('');
+  };
+}
+
+function handleServerMessage(msg) {
+  switch (msg.type) {
+
+    case 'eeg_sample':
+      // Store incoming EEG sample
+      eegBuffer.push(msg.data);
+      if (eegBuffer.length > TRIAL_SAMPLES * 3) eegBuffer.shift(); // rolling window
+
+      // If we are in collect/collection phase and a note is active, capture
+      if (gameMode === 'collect' && collectPhase === 'collection' && recordingNoteIdx !== null) {
+        if (!noteEEGMap[recordingNoteIdx]) noteEEGMap[recordingNoteIdx] = [];
+        noteEEGMap[recordingNoteIdx].push(msg.data);
+      }
+      updateWSStatus(`EEG · buf=${eegBuffer.length}`);
+      break;
+
+    case 'prediction':
+      // Server sends a BCI prediction → trigger game input
+      if (gameMode === 'test' && state === 'playing') {
+        const lane = normalisePredLabel(msg.label);
+        if (lane) triggerBCIInput(lane, msg.confidence);
+      } else if (gameMode === 'collect' && collectPhase === 'interactive' && state === 'playing') {
+        const lane = normalisePredLabel(msg.label);
+        if (lane) triggerBCIInput(lane, msg.confidence);
+      }
+      break;
+
+    case 'status':
+      updateWSStatus(msg.message || msg.phase);
+      if (msg.phase === 'calibrating') enterCalibratingScreen(msg.message);
+      if (msg.phase === 'inference')   {} // calibration_done handles this
+      break;
+
+    case 'calibration_done':
+      collectPhase = 'interactive';
+      exitCalibratingScreen();
+      break;
+
+    case 'error':
+      updateWSStatus('⚠ ' + msg.message);
+      // If calibration failed, allow restart
+      if (collectPhase === 'calibrating') exitCalibratingScreen(true);
+      break;
+  }
+}
+
+function normalisePredLabel(label) {
+  if (!label) return null;
+  const l = label.toLowerCase();
+  if (l.includes('left'))  return 'LEFT';
+  if (l.includes('right')) return 'RIGHT';
+  return null;
+}
+
+function sendTrialData(trials) {
+  if (!wsConnected || !ws) return false;
+  ws.send(JSON.stringify({ type: 'trial_data', trials }));
+  return true;
+}
+
+function setWSDot(state) {
+  const d = document.getElementById('ws-dot');
+  d.className = 'ws-dot';
+  if (state === 'connected') d.classList.add('connected');
+  if (state === 'error') d.classList.add('error');
+}
+function setWSLabel(t) { document.getElementById('ws-label-text').textContent = t; }
+function updateWSStatus(t) { document.getElementById('ws-status').textContent = t; }
+
+// ════════════════════════════════════════════════════════════════
+// BCI INPUT (test mode + interactive phase)
+// ════════════════════════════════════════════════════════════════
+let bciInputQueue = [];   // queued BCI lanes to process in game loop
+
+function triggerBCIInput(lane, confidence) {
+  bciInputQueue.push(lane);
+  // Show indicator
+  const el = document.getElementById('bci-indicator');
+  el.textContent = `${lane}  ${confidence ? confidence.toFixed(0)+'%' : ''}`;
+  el.className = 'bci-indicator ' + (lane === 'LEFT' ? 'left' : 'right') + ' show';
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.remove('show'), 600);
+}
+
+// ════════════════════════════════════════════════════════════════
+// CANVAS
+// ════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+  canvas.width = CANVAS_W; canvas.height = CANVAS_H;
+  canvas.style.cssText = `display:block;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:${CANVAS_W*scale}px;height:${CANVAS_H*scale}px;`;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ════════════════════════════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════════════════════════════
+let state = 'title';
+let notes = [], judgements = [];
+let score = 0, combo = 0, maxCombo = 0;
+let trialLog = [];          // [{index, timestamp, lane, label, judgement, score, eeg?}]
+let sessionStart = 0, noteIndex = 0, lastTime = 0;
+let _fps = 0, _fpsF = 0, _fpsL = 0;
+
+// ════════════════════════════════════════════════════════════════
+// PARTICLE POOL
+// ════════════════════════════════════════════════════════════════
+class Particle {
+  constructor() { this.active = false; }
+  init(x,y,vx,vy,life,color,size) { Object.assign(this,{x,y,vx,vy,life,maxLife:life,color,size,active:true}); }
+  update(dt) {
+    this.x+=this.vx*dt; this.y+=this.vy*dt; this.vy+=400*dt; this.life-=dt;
+    if(this.life<=0) this.active=false;
+  }
+  draw(ctx) {
+    const a=Math.max(0,this.life/this.maxLife);
+    ctx.save(); ctx.globalAlpha=a; ctx.fillStyle=this.color;
+    const s=this.size*a; ctx.fillRect(this.x-s/2,this.y-s/2,s,s);
+    ctx.restore();
+  }
+}
+const pPool = Array.from({length:180},()=>new Particle());
+function emitParticles(x,y,color,count=14) {
+  let n=0;
+  for(const p of pPool) {
+    if(!p.active&&n<count) {
+      n++;
+      const a=Math.random()*Math.PI*2, spd=80+Math.random()*220;
+      p.init(x,y,Math.cos(a)*spd,Math.sin(a)*spd-60,0.4+Math.random()*0.35,color,4+Math.random()*5);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// NOTE CLASS
+// ════════════════════════════════════════════════════════════════
+class Note {
+  constructor(lane, hitTime) {
+    this.lane=lane; this.hitTime=hitTime; this.state='falling';
+    this.x = lane==='LEFT' ? LANE_W/2 : LANE_W+LANE_W/2;
+  }
+  get y() {
+    const now=performance.now();
+    const progress=(now - this.hitTime + APPROACH_TIME)/APPROACH_TIME;
+    return (-NOTE_H) + (HIT_LINE_Y+NOTE_H)*Math.min(Math.max(progress,0),1);
+  }
+  draw(ctx,now) {
+    if(this.state!=='falling') return;
+    const y=this.y, c=COLORS[this.lane];
+    const proximity=Math.max(0,1-Math.abs(y-HIT_LINE_Y)/(CANVAS_H*0.5));
+    const glow=proximity*20+6;
+    ctx.save();
+    ctx.shadowColor=c.tile; ctx.shadowBlur=glow;
+    const tx=this.x-NOTE_W/2, ty=y-NOTE_H/2, r=8;
+    ctx.beginPath();
+    ctx.moveTo(tx+r,ty); ctx.lineTo(tx+NOTE_W-r,ty);
+    ctx.arcTo(tx+NOTE_W,ty,tx+NOTE_W,ty+r,r);
+    ctx.lineTo(tx+NOTE_W,ty+NOTE_H-r);
+    ctx.arcTo(tx+NOTE_W,ty+NOTE_H,tx+NOTE_W-r,ty+NOTE_H,r);
+    ctx.lineTo(tx+r,ty+NOTE_H);
+    ctx.arcTo(tx,ty+NOTE_H,tx,ty+NOTE_H-r,r);
+    ctx.lineTo(tx,ty+r);
+    ctx.arcTo(tx,ty,tx+r,ty,r);
+    ctx.closePath();
+    const grad=ctx.createLinearGradient(tx,ty,tx,ty+NOTE_H);
+    grad.addColorStop(0,c.tile+'dd'); grad.addColorStop(1,c.tile+'66');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,255,255,0.12)';
+    ctx.fillRect(tx+r,ty+4,NOTE_W-r*2,6);
+    ctx.restore();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// DRAWING
+// ════════════════════════════════════════════════════════════════
+function drawBackground(ctx) {
+  const bg=ctx.createLinearGradient(0,0,0,CANVAS_H);
+  bg.addColorStop(0,'#0a0a1a'); bg.addColorStop(1,'#000');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.fillStyle=COLORS.LEFT.bg; ctx.fillRect(0,0,LANE_W,CANVAS_H);
+  ctx.fillStyle=COLORS.RIGHT.bg; ctx.fillRect(LANE_W,0,LANE_W,CANVAS_H);
+  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(LANE_W,0); ctx.lineTo(LANE_W,CANVAS_H); ctx.stroke();
+  ctx.font='600 11px Orbitron,sans-serif'; ctx.letterSpacing='0.15em';
+  ctx.fillStyle='rgba(0,229,255,0.18)'; ctx.textAlign='center';
+  ctx.fillText('LEFT',LANE_W/2,28);
+  ctx.fillStyle='rgba(224,64,251,0.18)';
+  ctx.fillText('RIGHT',LANE_W+LANE_W/2,28);
+  ctx.letterSpacing='0';
+
+  // interactive phase glow ribbon
+  if(gameMode==='collect'&&collectPhase==='interactive') {
+    ctx.save();
+    ctx.strokeStyle='rgba(0,229,255,0.25)'; ctx.lineWidth=2;
+    ctx.setLineDash([4,8]); ctx.lineDashOffset=-performance.now()/60;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,CANVAS_H); ctx.stroke();
+    ctx.strokeStyle='rgba(224,64,251,0.25)';
+    ctx.beginPath(); ctx.moveTo(CANVAS_W,0); ctx.lineTo(CANVAS_W,CANVAS_H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+function drawHitLine(ctx) {
+  ctx.save();
+  ctx.shadowColor='rgba(255,255,255,0.3)'; ctx.shadowBlur=8;
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,HIT_LINE_Y); ctx.lineTo(CANVAS_W,HIT_LINE_Y); ctx.stroke();
+  [LANE_W/2, LANE_W+LANE_W/2].forEach((x,i)=>{
+    const c=i===0?COLORS.LEFT:COLORS.RIGHT;
+    ctx.shadowColor=c.tile; ctx.shadowBlur=12;
+    ctx.fillStyle=c.tile+'33'; ctx.beginPath(); ctx.arc(x,HIT_LINE_Y,24,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=c.tile+'88'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,HIT_LINE_Y,24,0,Math.PI*2); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawJudgements(ctx,now) {
+  judgements=judgements.filter(j=>now-j.time<700);
+  for(const j of judgements) {
+    const age=(now-j.time)/700, alpha=Math.max(0,1-age), y=j.y-age*40;
+    ctx.save(); ctx.globalAlpha=alpha;
+    ctx.font=`700 ${j.size}px Orbitron,sans-serif`; ctx.textAlign='center';
+    ctx.fillStyle=j.color; ctx.shadowColor=j.color; ctx.shadowBlur=12;
+    ctx.fillText(j.text,j.x,y); ctx.restore();
+  }
+}
+
+function drawHUD() {
+  document.getElementById('hud-score').textContent=score.toString().padStart(6,'0');
+  document.getElementById('hud-combo').innerHTML=`${combo}x<span>COMBO</span>`;
+  const pct=(trialLog.length/TOTAL_NOTES*100).toFixed(0);
+  document.getElementById('progress-fill').style.width=pct+'%';
+
+  // Phase label in collect mode
+  if(gameMode==='collect') {
+    const phases={ collection:'▶ COLLECTING', calibrating:'⟳ CALIBRATING', interactive:'⚡ LIVE BCI' };
+    document.getElementById('hud-phase').textContent=phases[collectPhase]||'';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// INPUT  (keyboard + touch + BCI queue)
+// ════════════════════════════════════════════════════════════════
+const Input = {left:false,right:false,leftJust:false,rightJust:false};
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='ArrowLeft' &&!Input.left){Input.left=true;Input.leftJust=true;}
+  if(e.code==='ArrowRight'&&!Input.right){Input.right=true;Input.rightJust=true;}
+  if(e.code==='Escape'&&state==='playing') showTitle();
+});
+document.addEventListener('keyup',e=>{
+  if(e.code==='ArrowLeft')  Input.left=false;
+  if(e.code==='ArrowRight') Input.right=false;
+});
+canvas.addEventListener('touchstart',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const tx=e.touches[0].clientX-rect.left;
+  const canvasX=tx/rect.width*CANVAS_W;
+  if(canvasX<LANE_W) Input.leftJust=true; else Input.rightJust=true;
+  e.preventDefault();
+},{passive:false});
+
+// ════════════════════════════════════════════════════════════════
+// NOTE SPAWNING & EEG CAPTURE WINDOW
+// ════════════════════════════════════════════════════════════════
+function spawnNotes(now) {
+  while(noteIndex<NOTE_CHART.length) {
+    const nc=NOTE_CHART[noteIndex];
+    const hitTime=nc.b*BEAT_MS;
+    const spawnTime=hitTime-APPROACH_TIME;
+    const elapsed=now-sessionStart;
+    if(elapsed>=spawnTime) {
+      notes.push(new Note(nc.l, sessionStart+hitTime));
+
+      // Start EEG capture window: TRIAL_SECONDS before hitTime (or now if late)
+      if(gameMode==='collect'&&collectPhase==='collection') {
+        const captureStart = Math.max(now, sessionStart+hitTime - TRIAL_SECONDS*1000/2);
+        scheduleEEGCapture(noteIndex, nc.l, sessionStart+hitTime);
+      }
+      noteIndex++;
+    } else break;
+  }
+}
+
+// We capture the EEG window centred on hitTime.
+// We start recording when the note spawns and stop TRIAL_SECONDS later.
+// recordingNoteIdx tracks which note we're currently buffering for.
+// (simple approach: capture from spawn → spawn + TRIAL_SECONDS)
+let captureScheduled = {}; // noteIdx → {lane, hitTime}
+
+function scheduleEEGCapture(idx, lane, hitTimeAbs) {
+  captureScheduled[idx] = { lane, hitTimeAbs };
+}
+
+function updateEEGCapture(now) {
+  if(gameMode!=='collect'||collectPhase!=='collection') return;
+  for(const [idxStr, cap] of Object.entries(captureScheduled)) {
+    const idx=parseInt(idxStr);
+    if(noteEEGMap[idx]===undefined) noteEEGMap[idx]={ lane:cap.lane, hitTimeAbs:cap.hitTimeAbs, samples:[] };
+    // stop capturing after TRIAL_SECONDS from hit
+    if(now > cap.hitTimeAbs + TRIAL_SECONDS*1000/2) {
+      delete captureScheduled[idx]; // done
+    }
+  }
+  // The actual sample push happens in handleServerMessage eeg_sample
+  // so we only need to know WHICH note to tag the sample under.
+  // Tag to the earliest open note capture window:
+  const openIndices = Object.keys(captureScheduled).map(Number).sort((a,b)=>a-b);
+  recordingNoteIdx = openIndices.length>0 ? openIndices[0] : null;
+}
+
+// ════════════════════════════════════════════════════════════════
+// GAME LOGIC
+// ════════════════════════════════════════════════════════════════
+function checkInput(now) {
+  const lanes = [];
+  if(Input.leftJust)  lanes.push('LEFT');
+  if(Input.rightJust) lanes.push('RIGHT');
+  Input.leftJust=false; Input.rightJust=false;
+
+  // Process BCI queue
+  while(bciInputQueue.length>0) lanes.push(bciInputQueue.shift());
+
+  // In collect/collection phase: only keyboard (no BCI yet)
+  // In collect/interactive or test mode: BCI drives input
+  for(const lane of lanes) {
+    let best=null, bestDist=Infinity;
+    for(const n of notes) {
+      if(n.state!=='falling'||n.lane!==lane) continue;
+      const dist=Math.abs(now-n.hitTime);
+      if(dist<bestDist){bestDist=dist;best=n;}
+    }
+    if(!best) continue;
+    if(bestDist<=HIT_WINDOW_PERFECT) judge(best,'PERFECT',now);
+    else if(bestDist<=HIT_WINDOW_GOOD) judge(best,'GOOD',now);
+  }
+}
+
+function judge(note, result, now) {
+  note.state='hit';
+  const pts=result==='PERFECT'?300:150;
+  score+=pts; combo+=10; maxCombo=Math.max(maxCombo,combo);
+  const c=COLORS[note.lane];
+  emitParticles(note.x,HIT_LINE_Y,c.tile,result==='PERFECT'?16:8);
+  const color=result==='PERFECT'?'#fff':c.tile;
+  judgements.push({text:result,x:note.x,y:HIT_LINE_Y-40,color,size:result==='PERFECT'?15:13,time:now});
+
+  // Build EEG chunk for this trial (collect mode)
+  let eegChunk = null;
+  if(gameMode==='collect' && noteEEGMap[trialLog.length]) {
+    const cap = noteEEGMap[trialLog.length];
+    eegChunk = cap.samples ? cap.samples : [];
+    // Pad/trim to TRIAL_SAMPLES
+    while(eegChunk.length < TRIAL_SAMPLES && eegChunk.length>0) eegChunk.push(eegChunk[eegChunk.length-1]);
+    eegChunk = eegChunk.slice(0, TRIAL_SAMPLES);
+    // Transpose: server expects (n_channels, n_times) → array of arrays per channel
+    if(eegChunk.length>0 && Array.isArray(eegChunk[0])) {
+      const nCh=eegChunk[0].length;
+      const transposed=Array.from({length:nCh},(_,ch)=>eegChunk.map(s=>s[ch]));
+      eegChunk=transposed;
+    }
+  }
+
+  trialLog.push({
+    index: trialLog.length,
+    timestamp: now-sessionStart,
+    lane: note.lane,
+    label: note.lane==='LEFT'?'lefthandimagery':'righthandimagery',
+    judgement: result,
+    score: pts,
+    ...(eegChunk ? {eeg: eegChunk} : {}),
+  });
+  drawHUD();
+}
+
+function checkMissed(now) {
+  for(const n of notes) {
+    if(n.state!=='falling') continue;
+    if(now>n.hitTime+HIT_WINDOW_GOOD+100) {
+      n.state='miss'; combo=0;
+      judgements.push({text:'MISS',x:n.x,y:HIT_LINE_Y-40,color:'#ff4466',size:13,time:now});
+      trialLog.push({
+        index:trialLog.length, timestamp:now-sessionStart,
+        lane:n.lane, label:n.lane==='LEFT'?'lefthandimagery':'righthandimagery',
+        judgement:'MISS', score:0,
+      });
+      drawHUD();
+    }
+  }
+  notes=notes.filter(n=>n.state==='falling'||n.state==='hit');
+}
+
+function checkSessionEnd(now) {
+  const elapsed=now-sessionStart;
+  const lastNote=NOTE_CHART[NOTE_CHART.length-1];
+  const sessionEnd=sessionStart+lastNote.b*BEAT_MS+2000;
+
+  if(elapsed>sessionEnd && noteIndex>=NOTE_CHART.length) {
+    if(gameMode==='collect' && collectPhase==='collection') {
+      // Transition to calibration
+      triggerCalibration();
+    } else {
+      endSession();
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// CALIBRATION FLOW  (collect mode only)
+// ════════════════════════════════════════════════════════════════
+let calProgressInterval = null;
+
+function triggerCalibration() {
+  state='calibrating';
+  collectPhase='calibrating';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('progress-bar').style.display='none';
+
+  // Build trial_data payload for server
+  const trials = trialLog.map((t,i)=>({
+    label: t.lane==='LEFT'?'Left Hand':'Right Hand',
+    eeg: t.eeg || [],        // (n_channels × n_times) or empty if no WS
+    judgement: t.judgement,
+    timestamp: t.timestamp,
+  }));
+
+  // Show calibrating screen
+  document.getElementById('screen-calibrating').classList.remove('hidden');
+  document.getElementById('cal-sub-text').textContent=
+    `${trials.length} trials collected. Fine-tuning model…\nThis may take 1–5 min depending on hardware.`;
+
+  // Animate progress bar (fake timed progress while we wait)
+  let prog=0;
+  document.getElementById('cal-progress-fill').style.width='0%';
+  calProgressInterval=setInterval(()=>{
+    prog=Math.min(prog+0.4,90); // asymptote at 90%, final jump on calibration_done
+    document.getElementById('cal-progress-fill').style.width=prog+'%';
+  },500);
+
+  const sent = sendTrialData(trials);
+  if(!sent) {
+    // No WS — simulate calibration delay then go interactive
+    updateWSStatus('No server · simulating calibration…');
+    setTimeout(()=>{
+      collectPhase='interactive';
+      exitCalibratingScreen();
+    }, 3000);
+  }
+}
+
+function enterCalibratingScreen(msg) {
+  if(msg) document.getElementById('cal-sub-text').textContent=msg;
+}
+
+function exitCalibratingScreen(failed=false) {
+  clearInterval(calProgressInterval);
+  document.getElementById('cal-progress-fill').style.width='100%';
+  setTimeout(()=>{
+    document.getElementById('screen-calibrating').classList.add('hidden');
+    if(failed) {
+      // Go to result anyway
+      endSession();
+    } else {
+      // Resume game in interactive mode
+      resumeInteractive();
+    }
+  }, 600);
+}
+
+function resumeInteractive() {
+  // Reset note chart for interactive round
+  notes=[]; judgements=[];
+  score=0; combo=0; maxCombo=0;
+  trialLog=[]; noteIndex=0;
+  bciInputQueue=[]; captureScheduled={};
+  sessionStart=performance.now(); lastTime=performance.now();
+  state='playing';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('progress-bar').style.display='block';
+  document.getElementById('hud-mode-tag').textContent='LIVE BCI';
+  document.getElementById('hud-mode-tag').className='collect'; // keep teal colour
+  updateWSStatus('⚡ Inference mode active');
+}
+
+// ════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ════════════════════════════════════════════════════════════════
+function gameLoop(ts) {
+  requestAnimationFrame(gameLoop);
+  const now=performance.now();
+
+  // FPS
+  _fpsF++;
+  if(now-_fpsL>1000){_fps=(_fpsF*1000/(now-_fpsL)).toFixed(0);_fpsF=0;_fpsL=now;}
+  document.getElementById('debug').textContent=
+    `FPS:${_fps}  ${trialLog.length}/${TOTAL_NOTES}  mode:${gameMode}  phase:${collectPhase}  ws:${wsConnected?'●':'○'}`;
+
+  if(state!=='playing') return;
+
+  const dt=Math.min((now-lastTime)/1000,0.05);
+  lastTime=now;
+
+  spawnNotes(now);
+  updateEEGCapture(now);
+  checkInput(now);
+  checkMissed(now);
+  checkSessionEnd(now);
+
+  // Draw
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  drawBackground(ctx);
+  drawHitLine(ctx);
+  for(const n of notes) n.draw(ctx,now);
+  for(const p of pPool) if(p.active){ p.update(dt); p.draw(ctx); }
+  drawJudgements(ctx,now);
+}
+
+// ════════════════════════════════════════════════════════════════
+// SESSION END
+// ════════════════════════════════════════════════════════════════
+function endSession() {
+  state='result';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('progress-bar').style.display='none';
+  document.getElementById('screen-result').classList.remove('hidden');
+
+  const hits=trialLog.filter(t=>t.judgement!=='MISS').length;
+  const acc=TOTAL_NOTES>0?Math.round(hits/TOTAL_NOTES*100):0;
+
+  document.getElementById('r-score').textContent=score.toLocaleString();
+  document.getElementById('r-combo').textContent=maxCombo+'x';
+  document.getElementById('r-trials').textContent=trialLog.length;
+  document.getElementById('r-acc').textContent=acc+'%';
+
+  const badge=document.getElementById('result-badge');
+  badge.textContent=gameMode==='collect'?'COLLECT MODE':'TEST MODE';
+  badge.className='result-mode-badge '+(gameMode==='collect'?'collect':'test');
+
+  // Colour result values for test mode
+  document.querySelectorAll('.result-val').forEach(el=>{
+    el.classList.toggle('test-val',gameMode==='test');
+  });
+
+  document.getElementById('r-acc-label').textContent=gameMode==='test'?'BCI ACCURACY':'HIT RATE';
+  document.getElementById('r-log-hint').textContent=
+    `${trialLog.length} trials · ${trialLog.filter(t=>t.eeg).length} with EEG · available as window.BCG_TRIALS`;
+
+  window.BCG_TRIALS = trialLog;
+  console.log('BCG Trial Log', JSON.stringify(trialLog.map(t=>({...t,eeg:t.eeg?`[${t.eeg.length}ch × ${t.eeg[0]?.length||0}t]`:null})),null,2));
+}
+
+function exportJSON() {
+  const data = JSON.stringify(trialLog, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bcg_trials_${gameMode}_${Date.now()}.json`;
+  a.click();
+}
+
+// ════════════════════════════════════════════════════════════════
+// SCENE MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+function showTitle() {
+  state='title';
+  cancelAnimationFrame(null);
+  document.getElementById('screen-title').classList.remove('hidden');
+  document.getElementById('screen-result').classList.add('hidden');
+  document.getElementById('screen-tutorial').classList.add('hidden');
+  document.getElementById('screen-calibrating').classList.add('hidden');
+  document.getElementById('hud').style.display='none';
+  document.getElementById('progress-bar').style.display='none';
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H); drawBackground(ctx);
+}
+
+function showTutorial() {
+  document.getElementById('screen-title').classList.add('hidden');
+  document.getElementById('screen-tutorial').classList.remove('hidden');
+  const isCollect=gameMode==='collect';
+  document.getElementById('tut-badge').textContent=isCollect?'COLLECT MODE':'TEST MODE';
+  document.getElementById('tut-badge').className='tut-mode-badge '+(isCollect?'collect':'test');
+  document.getElementById('tut-body-collect').style.display=isCollect?'contents':'none';
+  document.getElementById('tut-body-test').style.display=isCollect?'none':'contents';
+}
+
+function startGame() {
+  document.getElementById('screen-tutorial').classList.add('hidden');
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('progress-bar').style.display='block';
+
+  // Reset everything
+  notes=[]; judgements=[];
+  score=0; combo=0; maxCombo=0;
+  trialLog=[]; noteIndex=0;
+  eegBuffer=[]; noteEEGMap={}; captureScheduled={};
+  recordingNoteIdx=null; bciInputQueue=[];
+  collectPhase='collection';
+
+  // HUD mode tag
+  const tag=document.getElementById('hud-mode-tag');
+  tag.textContent=gameMode==='collect'?'COLLECT':'TEST';
+  tag.className='hud-mode-tag '+(gameMode==='collect'?'collect':'test');
+
+  sessionStart=performance.now(); lastTime=sessionStart;
+  state='playing';
+  drawHUD();
+}
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+requestAnimationFrame(gameLoop);
+drawBackground(ctx);
+</script>
+</body>
+</html>

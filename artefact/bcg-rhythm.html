@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCG Rhythm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Inter',sans-serif;}
+canvas{display:block;margin:0 auto;}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;}
+#ui button,[data-interactive]{pointer-events:auto;}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;transition:opacity 0.4s ease;}
+.screen.hidden{opacity:0;pointer-events:none;}
+
+/* TITLE */
+#screen-title{background:linear-gradient(180deg,#0d0d2a 0%,#000 100%);}
+.title-logo{font-family:'Orbitron',sans-serif;font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:0.2em;
+  background:linear-gradient(135deg,#00e5ff,#e040fb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 30px rgba(0,229,255,0.4));margin-bottom:0.25em;}
+.title-sub{font-family:'Orbitron',sans-serif;font-size:clamp(0.7rem,2vw,1rem);letter-spacing:0.3em;color:#4a4a7a;margin-bottom:3rem;}
+.btn-primary{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.15em;
+  padding:1rem 3rem;border:2px solid #00e5ff;background:transparent;color:#00e5ff;cursor:pointer;
+  border-radius:4px;transition:all 0.2s;position:relative;overflow:hidden;}
+.btn-primary::before{content:'';position:absolute;inset:0;background:#00e5ff;opacity:0;transition:opacity 0.2s;}
+.btn-primary:hover{color:#000;box-shadow:0 0 30px rgba(0,229,255,0.5);}
+.btn-primary:hover::before{opacity:1;}
+.btn-primary span{position:relative;z-index:1;}
+.title-note{color:#2a2a4a;font-size:0.75rem;margin-top:2rem;letter-spacing:0.1em;}
+
+/* TUTORIAL */
+#screen-tutorial{background:rgba(0,0,0,0.95);gap:2rem;padding:2rem;}
+.tut-title{font-family:'Orbitron',sans-serif;font-size:1.5rem;color:#fff;letter-spacing:0.1em;}
+.tut-lanes{display:flex;gap:3rem;margin:1rem 0;}
+.tut-lane{display:flex;flex-direction:column;align-items:center;gap:0.75rem;}
+.tut-tile{width:80px;height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;}
+.tut-tile.left{background:rgba(0,229,255,0.15);border:2px solid #00e5ff;color:#00e5ff;box-shadow:0 0 20px rgba(0,229,255,0.3);}
+.tut-tile.right{background:rgba(224,64,251,0.15);border:2px solid #e040fb;color:#e040fb;box-shadow:0 0 20px rgba(224,64,251,0.3);}
+.tut-label{font-size:0.8rem;color:#888;text-align:center;max-width:120px;line-height:1.5;}
+.tut-desc{color:#aaa;font-size:0.9rem;text-align:center;max-width:480px;line-height:1.7;}
+.tut-desc em{color:#fff;font-style:normal;font-weight:600;}
+
+/* RESULT */
+#screen-result{background:linear-gradient(180deg,#0d0d2a 0%,#000 100%);gap:1.5rem;}
+.result-title{font-family:'Orbitron',sans-serif;font-size:2rem;color:#fff;letter-spacing:0.15em;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:320px;}
+.result-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:1rem;text-align:center;}
+.result-val{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:700;color:#00e5ff;}
+.result-key{font-size:0.7rem;color:#666;letter-spacing:0.1em;margin-top:0.25rem;}
+.result-export{font-size:0.75rem;color:#333;margin-top:0.5rem;}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:15;pointer-events:none;}
+#hud-score{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;}
+#hud-combo{font-family:'Orbitron',sans-serif;font-size:1rem;color:#ffd700;font-variant-numeric:tabular-nums;text-align:right;}
+#hud-combo span{font-size:0.65rem;color:#888;display:block;letter-spacing:0.1em;}
+#progress-bar{position:fixed;top:0;left:0;right:0;height:3px;z-index:16;}
+#progress-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e040fb);width:0%;transition:width 0.3s;}
+#debug{position:fixed;bottom:8px;left:8px;font:11px/1.5 monospace;color:#0f0;background:rgba(0,0,0,0.75);padding:4px 8px;pointer-events:none;z-index:99;}
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div class="screen" id="screen-title">
+  <div class="title-logo">BCG</div>
+  <div class="title-sub">BRAIN CALIBRATION GAME</div>
+  <button class="btn-primary" onclick="showTutorial()"><span>START SESSION</span></button>
+  <div class="title-note">BCI MOTOR IMAGERY CALIBRATION PROTOTYPE</div>
+</div>
+
+<!-- TUTORIAL SCREEN -->
+<div class="screen hidden" id="screen-tutorial">
+  <div class="tut-title">HOW TO PLAY</div>
+  <div class="tut-lanes">
+    <div class="tut-lane">
+      <div class="tut-tile left">LEFT</div>
+      <div class="tut-label">Imagine moving your <em style="color:#00e5ff">LEFT hand</em> when tile reaches the line</div>
+    </div>
+    <div class="tut-lane">
+      <div class="tut-tile right">RIGHT</div>
+      <div class="tut-label">Imagine moving your <em style="color:#e040fb">RIGHT hand</em> when tile reaches the line</div>
+    </div>
+  </div>
+  <div class="tut-desc">
+    Tiles will fall in rhythm. <em>No need to press keys</em> — simply perform motor imagery at the moment the tile hits the line. Stay relaxed and focused.
+  </div>
+  <div class="tut-desc" style="font-size:0.78rem;color:#555;margin-top:-0.5rem;">
+    (In prototype mode: press ← → arrow keys to simulate MI response)
+  </div>
+  <button class="btn-primary" style="margin-top:1rem;" onclick="startGame()"><span>BEGIN</span></button>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen hidden" id="screen-result">
+  <div class="result-title">SESSION COMPLETE</div>
+  <div class="result-grid">
+    <div class="result-card"><div class="result-val" id="r-score">0</div><div class="result-key">SCORE</div></div>
+    <div class="result-card"><div class="result-val" id="r-combo">0</div><div class="result-key">MAX COMBO</div></div>
+    <div class="result-card"><div class="result-val" id="r-trials">0</div><div class="result-key">TRIALS</div></div>
+    <div class="result-card"><div class="result-val" id="r-acc">0%</div><div class="result-key">HIT RATE</div></div>
+  </div>
+  <div class="result-export" id="r-log-hint"></div>
+  <button class="btn-primary" style="margin-top:1rem;" onclick="showTitle()"><span>NEW SESSION</span></button>
+</div>
+
+<!-- HUD (visible during gameplay) -->
+<div id="hud" style="display:none;">
+  <div id="hud-score">0</div>
+  <div id="hud-combo">0x<span>COMBO</span></div>
+</div>
+<div id="progress-bar" style="display:none;"><div id="progress-fill"></div></div>
+<div id="debug"></div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+// ============================================================
+// CONSTANTS & CONFIG
+// ============================================================
+const BPM = 70;
+const BEAT_MS = (60 / BPM) * 1000;
+const APPROACH_TIME = 1600; // ms for note to travel full height
+const HIT_WINDOW_PERFECT = 90;
+const HIT_WINDOW_GOOD = 180;
+const CANVAS_W = 420;
+const CANVAS_H = 700;
+const LANE_W = CANVAS_W / 2;
+const HIT_LINE_Y = CANVAS_H * 0.84;
+const NOTE_W = LANE_W * 0.72;
+const NOTE_H = 54;
+
+const COLORS = {
+  LEFT:  { tile: '#00e5ff', glow: 'rgba(0,229,255,', bg: 'rgba(0,229,255,0.08)' },
+  RIGHT: { tile: '#e040fb', glow: 'rgba(224,64,251,', bg: 'rgba(224,64,251,0.08)' },
+};
+
+// ============================================================
+// NOTE CHART  (40 trials: 20 LEFT, 20 RIGHT, balanced)
+// beat numbers are relative beat indices from session start
+// ============================================================
+const NOTE_CHART = [
+  {b:2,l:'LEFT'},{b:3,l:'RIGHT'},{b:5,l:'LEFT'},{b:6,l:'RIGHT'},
+  {b:8,l:'RIGHT'},{b:9,l:'LEFT'},{b:11,l:'LEFT'},{b:12,l:'RIGHT'},
+  {b:14,l:'RIGHT'},{b:15,l:'LEFT'},{b:17,l:'LEFT'},{b:18,l:'RIGHT'},
+  {b:20,l:'LEFT'},{b:21,l:'RIGHT'},{b:23,l:'RIGHT'},{b:24,l:'LEFT'},
+  {b:26,l:'LEFT'},{b:27,l:'RIGHT'},{b:29,l:'RIGHT'},{b:30,l:'LEFT'},
+  {b:32,l:'RIGHT'},{b:33,l:'LEFT'},{b:35,l:'LEFT'},{b:36,l:'RIGHT'},
+  {b:38,l:'LEFT'},{b:39,l:'RIGHT'},{b:41,l:'RIGHT'},{b:42,l:'LEFT'},
+  {b:44,l:'LEFT'},{b:45,l:'RIGHT'},{b:47,l:'RIGHT'},{b:48,l:'LEFT'},
+  {b:50,l:'LEFT'},{b:51,l:'RIGHT'},{b:53,l:'RIGHT'},{b:54,l:'LEFT'},
+  {b:56,l:'LEFT'},{b:57,l:'RIGHT'},{b:59,l:'LEFT'},{b:60,l:'RIGHT'},
+];
+const TOTAL_NOTES = NOTE_CHART.length;
+
+// ============================================================
+// CANVAS SETUP
+// ============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
+  canvas.style.width = (CANVAS_W * scale) + 'px';
+  canvas.style.height = (CANVAS_H * scale) + 'px';
+  canvas.style.position = 'fixed';
+  canvas.style.top = '50%';
+  canvas.style.left = '50%';
+  canvas.style.transform = 'translate(-50%,-50%)';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let state = 'title';
+let notes = [];
+let particles = [];
+let judgements = [];
+let score = 0, combo = 0, maxCombo = 0;
+let trialLog = [];
+let sessionStart = 0;
+let noteIndex = 0;
+let rafId = null;
+let lastTime = 0;
+let _fps = 0, _fpsFrames = 0, _fpsLast = 0;
+
+// ============================================================
+// PARTICLE POOL
+// ============================================================
+class Particle {
+  constructor() { this.active = false; }
+  init(x, y, vx, vy, life, color, size) {
+    Object.assign(this, {x,y,vx,vy,life,maxLife:life,color,size,active:true});
+  }
+  update(dt) {
+    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.vy += 400 * dt; this.life -= dt;
+    if (this.life <= 0) this.active = false;
+  }
+  draw(ctx) {
+    const a = Math.max(0, this.life / this.maxLife);
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.fillStyle = this.color;
+    const s = this.size * a;
+    ctx.fillRect(this.x - s/2, this.y - s/2, s, s);
+    ctx.restore();
+  }
+}
+const pPool = Array.from({length:150}, () => new Particle());
+
+function emitParticles(x, y, color, count=14) {
+  let emitted = 0;
+  for (const p of pPool) {
+    if (!p.active && emitted < count) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 80 + Math.random() * 220;
+      p.init(x, y, Math.cos(angle)*speed, Math.sin(angle)*speed - 60,
+        0.4 + Math.random()*0.35, color, 4 + Math.random()*5);
+      emitted++;
+    }
+  }
+}
+
+// ============================================================
+// NOTE CLASS
+// ============================================================
+class Note {
+  constructor(lane, hitTime) {
+    this.lane = lane;
+    this.hitTime = hitTime;
+    this.state = 'falling'; // falling | hit | miss
+    this.x = lane === 'LEFT' ? LANE_W/2 : LANE_W + LANE_W/2;
+    this.alpha = 1;
+    this.glowPulse = 0;
+  }
+
+  get y() {
+    const elapsed = performance.now() - sessionStart;
+    const progress = (elapsed - (this.hitTime - APPROACH_TIME)) / APPROACH_TIME;
+    return -NOTE_H + (HIT_LINE_Y + NOTE_H) * Math.min(progress, 1);
+  }
+
+  draw(ctx, now) {
+    if (this.state !== 'falling') return;
+    const y = this.y;
+    const c = COLORS[this.lane];
+    const proximity = Math.max(0, 1 - Math.abs(y - HIT_LINE_Y) / (CANVAS_H * 0.5));
+    const glow = proximity * 20 + 6;
+    this.glowPulse = proximity;
+
+    ctx.save();
+    // glow
+    ctx.shadowColor = c.tile;
+    ctx.shadowBlur = glow;
+    // tile
+    const tx = this.x - NOTE_W/2;
+    const ty = y - NOTE_H/2;
+    const r = 8;
+    ctx.beginPath();
+    ctx.moveTo(tx+r,ty); ctx.lineTo(tx+NOTE_W-r,ty);
+    ctx.arcTo(tx+NOTE_W,ty,tx+NOTE_W,ty+r,r);
+    ctx.lineTo(tx+NOTE_W,ty+NOTE_H-r);
+    ctx.arcTo(tx+NOTE_W,ty+NOTE_H,tx+NOTE_W-r,ty+NOTE_H,r);
+    ctx.lineTo(tx+r,ty+NOTE_H);
+    ctx.arcTo(tx,ty+NOTE_H,tx,ty+NOTE_H-r,r);
+    ctx.lineTo(tx,ty+r);
+    ctx.arcTo(tx,ty,tx+r,ty,r);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(tx, ty, tx, ty+NOTE_H);
+    grad.addColorStop(0, c.tile + 'dd');
+    grad.addColorStop(1, c.tile + '66');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    // inner highlight
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(tx+r, ty+4, NOTE_W-r*2, 6);
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// DRAWING
+// ============================================================
+function drawBackground(ctx) {
+  const bg = ctx.createLinearGradient(0,0,0,CANVAS_H);
+  bg.addColorStop(0,'#0a0a1a'); bg.addColorStop(1,'#000');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+  // Lane backgrounds
+  ctx.fillStyle = COLORS.LEFT.bg; ctx.fillRect(0,0,LANE_W,CANVAS_H);
+  ctx.fillStyle = COLORS.RIGHT.bg; ctx.fillRect(LANE_W,0,LANE_W,CANVAS_H);
+
+  // Center divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(LANE_W,0); ctx.lineTo(LANE_W,CANVAS_H); ctx.stroke();
+
+  // Lane labels (subtle)
+  ctx.font = '600 11px Orbitron, sans-serif';
+  ctx.letterSpacing = '0.15em';
+  ctx.fillStyle = 'rgba(0,229,255,0.18)';
+  ctx.textAlign = 'center';
+  ctx.fillText('LEFT', LANE_W/2, 28);
+  ctx.fillStyle = 'rgba(224,64,251,0.18)';
+  ctx.fillText('RIGHT', LANE_W + LANE_W/2, 28);
+  ctx.letterSpacing = '0';
+}
+
+function drawHitLine(ctx, now) {
+  // Base line
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,255,255,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, HIT_LINE_Y); ctx.lineTo(CANVAS_W, HIT_LINE_Y); ctx.stroke();
+
+  // LEFT zone glow
+  ctx.shadowColor = COLORS.LEFT.tile;
+  ctx.strokeStyle = COLORS.LEFT.tile + '55';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, HIT_LINE_Y); ctx.lineTo(LANE_W, HIT_LINE_Y); ctx.stroke();
+
+  // RIGHT zone glow
+  ctx.shadowColor = COLORS.RIGHT.tile;
+  ctx.strokeStyle = COLORS.RIGHT.tile + '55';
+  ctx.beginPath(); ctx.moveTo(LANE_W, HIT_LINE_Y); ctx.lineTo(CANVAS_W, HIT_LINE_Y); ctx.stroke();
+
+  // Hit zone indicators (small circles)
+  [LANE_W/2, LANE_W + LANE_W/2].forEach((x, i) => {
+    const c = i === 0 ? COLORS.LEFT : COLORS.RIGHT;
+    ctx.shadowColor = c.tile; ctx.shadowBlur = 12;
+    ctx.fillStyle = c.tile + '33';
+    ctx.beginPath(); ctx.arc(x, HIT_LINE_Y, 24, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = c.tile + '88'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, HIT_LINE_Y, 24, 0, Math.PI*2); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawJudgements(ctx, now) {
+  judgements = judgements.filter(j => now - j.time < 700);
+  for (const j of judgements) {
+    const age = (now - j.time) / 700;
+    const alpha = Math.max(0, 1 - age);
+    const y = j.y - age * 40;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = `700 ${j.size}px Orbitron, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = j.color;
+    ctx.shadowColor = j.color; ctx.shadowBlur = 12;
+    ctx.fillText(j.text, j.x, y);
+    ctx.restore();
+  }
+}
+
+function drawHUD(score, combo) {
+  document.getElementById('hud-score').textContent = score.toString().padStart(6,'0');
+  document.getElementById('hud-combo').innerHTML = `${combo}x<span>COMBO</span>`;
+  const pct = (trialLog.length / TOTAL_NOTES * 100).toFixed(0);
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+const Input = { left: false, right: false, leftJust: false, rightJust: false };
+document.addEventListener('keydown', e => {
+  if (e.code === 'ArrowLeft' && !Input.left) { Input.left = true; Input.leftJust = true; }
+  if (e.code === 'ArrowRight' && !Input.right) { Input.right = true; Input.rightJust = true; }
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'ArrowLeft') Input.left = false;
+  if (e.code === 'ArrowRight') Input.right = false;
+});
+
+// Touch support
+canvas.addEventListener('touchstart', e => {
+  const rect = canvas.getBoundingClientRect();
+  const tx = e.touches[0].clientX - rect.left;
+  const canvasX = tx / rect.width * CANVAS_W;
+  if (canvasX < LANE_W) Input.leftJust = true;
+  else Input.rightJust = true;
+  e.preventDefault();
+}, {passive:false});
+
+// ============================================================
+// GAME LOGIC
+// ============================================================
+function spawnNotes(now) {
+  while (noteIndex < NOTE_CHART.length) {
+    const nc = NOTE_CHART[noteIndex];
+    const hitTime = nc.b * BEAT_MS;
+    const spawnTime = hitTime - APPROACH_TIME;
+    const elapsed = now - sessionStart;
+    if (elapsed >= spawnTime) {
+      notes.push(new Note(nc.l, sessionStart + hitTime));
+      noteIndex++;
+    } else break;
+  }
+}
+
+function checkInput(now) {
+  const lanes = [];
+  if (Input.leftJust) lanes.push('LEFT');
+  if (Input.rightJust) lanes.push('RIGHT');
+  Input.leftJust = false; Input.rightJust = false;
+
+  for (const lane of lanes) {
+    // find closest note in this lane
+    let best = null, bestDist = Infinity;
+    for (const n of notes) {
+      if (n.state !== 'falling' || n.lane !== lane) continue;
+      const dist = Math.abs(now - n.hitTime);
+      if (dist < bestDist) { bestDist = dist; best = n; }
+    }
+    if (!best) continue;
+    if (bestDist <= HIT_WINDOW_PERFECT) judge(best, 'PERFECT', now);
+    else if (bestDist <= HIT_WINDOW_GOOD) judge(best, 'GOOD', now);
+  }
+}
+
+function judge(note, result, now) {
+  note.state = 'hit';
+  const pts = result === 'PERFECT' ? 300 : 150;
+  score += pts + combo * 10;
+  combo++;
+  maxCombo = Math.max(maxCombo, combo);
+
+  const c = COLORS[note.lane];
+  emitParticles(note.x, HIT_LINE_Y, c.tile, result === 'PERFECT' ? 16 : 8);
+
+  const color = result === 'PERFECT' ? '#fff' : c.tile;
+  judgements.push({text: result, x: note.x, y: HIT_LINE_Y - 40,
+    color, size: result === 'PERFECT' ? 15 : 13, time: now});
+
+  trialLog.push({
+    index: trialLog.length,
+    timestamp: now - sessionStart,
+    lane: note.lane,
+    label: note.lane === 'LEFT' ? 'left_hand_imagery' : 'right_hand_imagery',
+    judgement: result,
+    score: pts
+  });
+
+  drawHUD(score, combo);
+}
+
+function checkMissed(now) {
+  for (const n of notes) {
+    if (n.state !== 'falling') continue;
+    if (now > n.hitTime + HIT_WINDOW_GOOD + 100) {
+      n.state = 'miss';
+      combo = 0;
+      judgements.push({text:'MISS', x:n.x, y: HIT_LINE_Y - 40,
+        color:'#ff4466', size:13, time:now});
+      trialLog.push({
+        index: trialLog.length, timestamp: now - sessionStart,
+        lane: n.lane, label: n.lane === 'LEFT' ? 'left_hand_imagery' : 'right_hand_imagery',
+        judgement: 'MISS', score: 0
+      });
+      drawHUD(score, combo);
+    }
+  }
+  notes = notes.filter(n => n.state === 'falling' || (n.state === 'hit'));
+}
+
+function checkSessionEnd(now) {
+  const elapsed = now - sessionStart;
+  const lastNote = NOTE_CHART[NOTE_CHART.length - 1];
+  const sessionEnd = lastNote.b * BEAT_MS + 2000;
+  if (elapsed > sessionEnd && noteIndex >= NOTE_CHART.length) {
+    endSession();
+  }
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+function gameLoop(ts) {
+  rafId = requestAnimationFrame(gameLoop);
+  const now = performance.now();
+
+  // FPS
+  _fpsFrames++;
+  if (now - _fpsLast >= 1000) {
+    _fps = (_fpsFrames * 1000 / (now - _fpsLast)).toFixed(0);
+    _fpsFrames = 0; _fpsLast = now;
+  }
+  document.getElementById('debug').textContent = `FPS:${_fps} | Trials:${trialLog.length}/${TOTAL_NOTES} | BPM:${BPM}`;
+
+  if (state !== 'playing') return;
+
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  spawnNotes(now);
+  checkInput(now);
+  checkMissed(now);
+  checkSessionEnd(now);
+
+  // Update particles
+  for (const p of pPool) if (p.active) p.update(dt);
+
+  // Draw
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  drawBackground(ctx);
+  drawHitLine(ctx, now);
+  for (const n of notes) n.draw(ctx, now);
+  for (const p of pPool) if (p.active) p.draw(ctx);
+  drawJudgements(ctx, now);
+}
+
+// ============================================================
+// SCENE MANAGEMENT
+// ============================================================
+function showTitle() {
+  state = 'title';
+  document.getElementById('screen-title').classList.remove('hidden');
+  document.getElementById('screen-result').classList.add('hidden');
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('progress-bar').style.display = 'none';
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  drawBackground(ctx);
+}
+
+function showTutorial() {
+  document.getElementById('screen-title').classList.add('hidden');
+  document.getElementById('screen-tutorial').classList.remove('hidden');
+}
+
+function startGame() {
+  document.getElementById('screen-tutorial').classList.add('hidden');
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('progress-bar').style.display = 'block';
+  // reset state
+  notes = []; particles = []; judgements = [];
+  score = 0; combo = 0; maxCombo = 0;
+  trialLog = []; noteIndex = 0;
+  sessionStart = performance.now();
+  lastTime = performance.now();
+  state = 'playing';
+  drawHUD(0, 0);
+}
+
+function endSession() {
+  state = 'result';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('progress-bar').style.display = 'none';
+  document.getElementById('screen-result').classList.remove('hidden');
+
+  const hits = trialLog.filter(t => t.judgement !== 'MISS').length;
+  const acc = TOTAL_NOTES > 0 ? Math.round(hits / TOTAL_NOTES * 100) : 0;
+
+  document.getElementById('r-score').textContent = score.toLocaleString();
+  document.getElementById('r-combo').textContent = maxCombo + 'x';
+  document.getElementById('r-trials').textContent = trialLog.length;
+  document.getElementById('r-acc').textContent = acc + '%';
+  document.getElementById('r-log-hint').textContent =
+    `Trial log (${trialLog.length} trials) available in console — window.BCG_TRIALS`;
+  window.BCG_TRIALS = trialLog;
+  console.log('[BCG] Trial Log:', JSON.stringify(trialLog, null, 2));
+}
+
+// Test hook
+window.render_game_to_text = () => JSON.stringify({
+  state, score, combo, maxCombo,
+  trials: trialLog.length, totalNotes: TOTAL_NOTES,
+  activeNotes: notes.filter(n=>n.state==='falling').length
+});
+window.advanceTime = (ms) => {
+  const steps = Math.max(1, Math.round(ms / (1000/60)));
+  for (let i=0; i<steps; i++) {
+    if (state === 'playing') {
+      const now = sessionStart + (performance.now() - sessionStart);
+      spawnNotes(performance.now()); checkMissed(performance.now());
+    }
+  }
+};
+
+// ============================================================
+// INIT
+// ============================================================
+requestAnimationFrame(gameLoop);
+drawBackground(ctx);
+</script>
+</body>
+</html>

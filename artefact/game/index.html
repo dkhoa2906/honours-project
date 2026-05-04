@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCG Rhythm Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- HEADER -->
+     <div id="header"">
+        <h1>BCG</h1>
+        <span id="phase-badge">IDLE</span>
+    </div>
+
+    <!-- GAME -->
+     <div id="game-wrap">
+
+        <canvas id="game" width="320" height="520"></canvas>
+        <div id="lane-labels">
+            <div class="lane-labels LEFT">Left</div>
+            <div class="lane-labels RIGHT">Right</div>
+        </div>
+
+     </div>
+
+     <!-- FOOTER -->
+      <div id="footer">
+        <button id="btn-connect">Connect</button>
+        <button id="btn-start">Start</button>
+      </div>
+
+      <!-- SCRIPTS -->
+       <script src="js/config.js"></script>
+       <script src="js/renderer.js"></script>
+       <script src="js/audio.js"></script>
+       <script src="js/game.js"></script>
+       <script src="js/websocket.js"></script>
+</body>
+</html>
