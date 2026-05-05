@@ -21,11 +21,17 @@ const HIT_H = 4;
 // Trial / collect
 const TRIALS_PER_CLASS = 10;
 const TRIAL_DURATION_MS = 2000;
-const INTER_TRIAL_MS = 1000;
+const INTER_TRIAL_MS = 500;
+
+// Rest
+const REST_DEADZONE_MS = 500;
+const REST_DURATION_MS = 2000;
 
 // Timing
 const SPAWN_FRAMES = Math.round((HIT_Y + TILE_H) / TILE_SPEED);
-const TRIAL_GAP_FRAMES = Math.round((TRIAL_DURATION_MS + INTER_TRIAL_MS) / 1000 * 60);
+const TRIAL_GAP_FRAMES = Math.round(
+    (TRIAL_DURATION_MS + REST_DEADZONE_MS + REST_DURATION_MS + 
+        INTER_TRIAL_MS) / 1000 * 60);
 
 // Server 
 const WS_URL = 'ws://localhost:8765';

@@ -20,6 +20,6 @@
             "Rest":       "#2E8B57"
         },
         "save_path": "recordings",
-        "simulation_mode": true
+        "simulation_mode": false
     }
 }

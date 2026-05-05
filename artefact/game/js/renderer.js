@@ -1,6 +1,11 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
+let predictedLane = null;
+
+function setPredictedLane(laneIdx) {
+  predictedLane = laneIdx;
+}
 
 function roundRect(x, y, w, h, r) {
   ctx.beginPath();
@@ -68,4 +73,15 @@ function drawFrame(tiles) {
     ctx.fillRect(i * LANE_W + 8, HIT_Y, TILE_W, HIT_H);
     ctx.shadowBlur  = 0;
   });
+
+  // Highlight predicted lane at hit line
+  if (predictedLane !== null) {
+    const i = predictedLane;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(i * LANE_W + 6, HIT_Y - 4, TILE_W + 4, HIT_H + 8);
+  }
+
 }
+
+

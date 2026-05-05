@@ -4,6 +4,7 @@ import logging
 import threading
 from pathlib import Path
 
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTextEdit, QLineEdit, QFrame
@@ -11,6 +12,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtGui import QFont
 
+from bcg_core.config_schema import AppConfig
+from bcg_core.eeg_worker import EEGWorker
 from bcg_server import BCGServer
 
 logger = logging.getLogger(__name__)
@@ -28,11 +31,13 @@ COLORS = {
 
 
 class ServerSignals(QObject):
-    log         = pyqtSignal(str)
-    phase       = pyqtSignal(str)
-    headset     = pyqtSignal(bool)
+    log = pyqtSignal(str)
+    phase = pyqtSignal(str)
+    headset = pyqtSignal(bool)
     trial_count = pyqtSignal(int)
-    clients     = pyqtSignal(int)
+    clients = pyqtSignal(int)
+    eeg = pyqtSignal(str)
+
 
 
 class BCGServerWindow(QMainWindow):
@@ -47,7 +52,11 @@ class BCGServerWindow(QMainWindow):
         self._signals.headset.connect(self._update_headset)
         self._signals.trial_count.connect(self._update_trials)
         self._signals.clients.connect(self._update_clients)
+        self._signals.eeg.connect(self._update_eeg)
 
+        self._server = None
+        self._eeg_worker = None
+        
         self._server_thread = None
         self._build_ui()
         self._apply_theme()
@@ -130,6 +139,12 @@ class BCGServerWindow(QMainWindow):
         btn_row.addWidget(self._btn_stop)
         root.addLayout(btn_row)
 
+        # EEG debug line
+        self._lb_eeg = QLabel("EEG: —")
+        self._lb_eeg.setFont(QFont("Segoe UI", 9))
+        self._lb_eeg.setStyleSheet(f"color: {COLORS['muted']};")
+        root.addWidget(self._lb_eeg)
+
     def _make_card(self, title: str, value: str, color: str) -> dict:
         card = QWidget()
         card.setObjectName("card")
@@ -163,7 +178,7 @@ class BCGServerWindow(QMainWindow):
             QPushButton:disabled {{ color:#555; border-color:#444; }}
         """)
 
-    # ── Signal handlers ───────────────────────────────────────
+    # ---> Signals handler
     def _log_line(self, msg: str):
         self._log.append(msg)
         self._log.verticalScrollBar().setValue(self._log.verticalScrollBar().maximum())
@@ -198,20 +213,38 @@ class BCGServerWindow(QMainWindow):
         else:
             self._card_clients["label"].setText("○ No client")
             self._card_clients["label"].setStyleSheet(f"color: {COLORS['muted']};")
+    
+    def _update_eeg(self, text: str):
+        self._lb_eeg.setText(f"EEG: {text}")
+    # <---
 
-    # ── Server control ────────────────────────────────────────
+
+    # ---> Server control
     def _start_server(self):
         addr = self._input_addr.text().strip()
         host, port = addr.split(":") if ":" in addr else ("localhost", "8765")
 
-        with open(Path(__file__).parent.parent / "config" / "server_conf.json") as f:
+        cfg_path = Path(__file__).parent.parent / "config" / "server_conf.json"
+        with open(cfg_path) as f:
             cfg = json.load(f)
 
         cfg["server"]["host"] = host
         cfg["server"]["port"] = int(port)
 
+        # Build typed config and server
+        app_cfg = AppConfig.model_validate(cfg)
+        self._server = BCGServer(cfg, self._signals)
+
+        # EEGWorker as EEG source (simulation or real)
+        self._eeg_worker = EEGWorker(app_cfg)
+        self._eeg_worker.sample_ready.connect(self._server._on_sample)
+
+        if app_cfg.live.simulation_mode:
+            self._eeg_worker.start_simulation()
+
+        # Start asyncio server on background thread
         def run_loop():
-            asyncio.run(BCGServer(cfg, self._signals).run())
+            asyncio.run(self._server.run())
 
         self._server_thread = threading.Thread(target=run_loop, daemon=True)
         self._server_thread.start()
@@ -220,7 +253,9 @@ class BCGServerWindow(QMainWindow):
         self._btn_stop.setEnabled(True)
         self._input_addr.setEnabled(False)
 
+
     def _stop_server(self):
         self._log_line("Server stopped (restart app to reuse port).")
         self._btn_stop.setEnabled(False)
         self._update_phase("idle")
+    # <---

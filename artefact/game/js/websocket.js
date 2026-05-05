@@ -1,5 +1,11 @@
 let ws = null;
 
+function setInfo(id, val) {
+  const el = document.getElementById(id);
+  if (el) 
+    el.textContent = val;
+}
+
 // --->
 function connect() {
   ws = new WebSocket(WS_URL);
@@ -36,7 +42,67 @@ function send(obj) {
 
 // --->
 function handleServerMsg(msg) {
-    // Implement later
+  if (msg.type === 'status' || msg.type === 'phase_change') {
+    const badge = document.getElementById('phase-badge');
+
+    if (!badge) return;
+
+    if (msg.phase === 'collection') {
+      badge.textContent = 'COLLECTION';
+      badge.style.background = '#FFD700';
+    } else if (msg.phase === 'calibrating') {
+      badge.textContent = 'CALIBRATING';
+      badge.style.background = '#FFA500';
+    } else if (msg.phase === 'inference') {
+      badge.textContent = 'INFERENCE';
+      badge.style.background = '#2E8B57';
+      document.getElementById('row-predict').style.display = 'flex';
+    } else {
+      badge.textContent = 'IDLE';
+      badge.style.background = '#555';
+    }
+
+    setInfo('info-phase', (msg.phase || 'idle').toUpperCase()); 
+    
+    console.log('Phase:', msg.phase);
+    return;
+  }
+
+  if (msg.type === 'trial_count') {
+    setInfo('info-count', msg.count);
+    console.log('Trials collected:', msg.count);
+    if (typeof onTrialCountUpdate === 'function') onTrialCountUpdate(msg.count);
+    return;
+  }
+
+  if (msg.type === 'calibration_done') {
+    console.log('Calibration done, starting inference');
+    send({ type: 'start_inference' });
+    return;
+  }
+
+  if (msg.type === 'prediction') {
+    const conf = (msg.confidence * 100).toFixed(0);
+    setInfo('info-predict', `${msg.label}  ${conf}%`); 
+    console.log('Prediction:', msg.label, msg.confidence);
+    handlePrediction(msg.label);
+    return;
+  }
+
+  if (msg.type === 'error') {
+    console.error('Server error:', msg.message);
+    return;
+  }
+
+  if (msg.type === 'eeg_window') {
+    if (msg.data?.length) {
+        const vals = msg.data[0].slice(0, 4).map(v => v.toFixed(1)).join('  ');
+        setInfo('info-eeg', vals); // ← thêm
+    }
+    return;
+  }
+
+  console.log('Unknown message', msg);
 }
 // <---
 

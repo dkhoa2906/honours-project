@@ -2,6 +2,11 @@ let tiles = [];
 let isRunning = false;
 let frameId = null;
 
+let totalTrials = 0;
+const N_CLASSES = 3;
+const MIN_TRIALS_TO_CALIBRATE = TRIALS_PER_CLASS * N_CLASSES; 
+let calibrationRequested = false;
+
 
 function createTile(lane) {
     return {
@@ -33,32 +38,47 @@ function buildTrialPool() {
 
 
 // Spawn --->
-let frameCount = 0;
-let nextSpawnAt = SPAWN_FRAMES;
+let frameCount = 0;  
 
 function spawnNext() {
-  if (trialIdx >= trialPool.length) {
-    stopGame();
-    return;
-  }
-  const lane = trialPool[trialIdx++];
-  tiles.push(createTile(lane));
-  nextSpawnAt = frameCount + TRIAL_GAP_FRAMES;
+    if (trialIdx >= trialPool.length) { 
+        stopGame(); 
+        return; 
+    }
+    const lane = trialPool[trialIdx++];
+    tiles.push(createTile(lane));
 }
 // <---
 
+const labelMap = { LEFT: 'Left Hand', RIGHT: 'Right Hand' };
 
 function update() {
     frameCount++;
-    if (frameCount === nextSpawnAt)
-        spawnNext();
 
     tiles.forEach(t => {
         t.y += TILE_SPEED;
-
-        if (!t.played && t.y >= HIT_Y) {
+        const tileCenterY = t.y + TILE_H / 2;
+        
+        if (!t.played && tileCenterY >= HIT_Y) {
             t.played = true;
+            const label = labelMap[LANE_NAMES[t.lane]];
+            send({ type: 'trial_start', label });
+            setInfo('info-trial', label);
             playNote();
+
+            setTimeout(() => {
+                send({ type: 'trial_end', label });
+                setTimeout(() => {
+                    send({ type: 'trial_start', label: 'Rest' });
+                    setInfo('info-trial', 'Rest');
+
+                    setTimeout(() => {
+                        send({ type: 'trial_end', label: 'Rest' });
+                        setInfo('info-trial', '—');
+                        setTimeout(() => spawnNext(), INTER_TRIAL_MS);
+                    }, REST_DURATION_MS);
+                }, REST_DEADZONE_MS);
+            }, TRIAL_DURATION_MS);
         }
     });
 
@@ -74,13 +94,11 @@ function loop() {
 function startGame() {
     trialPool = buildTrialPool();
     trialIdx = 0;
-    frameCount = 0;
-    nextSpawnAt = SPAWN_FRAMES;
     tiles = [];
     isRunning = true;
     initAudio();
-    spawnNext();
     loop();
+    setTimeout(() => spawnNext(), 2000);
 }
 
 function stopGame() {
@@ -90,3 +108,21 @@ function stopGame() {
 
 
 document.getElementById('btn-start').addEventListener('click', startGame);
+
+function onTrialCountUpdate(count) {
+  totalTrials = count;
+  if (!calibrationRequested && totalTrials >= MIN_TRIALS_TO_CALIBRATE) {
+    calibrationRequested = true;
+    send({ type: 'start_calibration' });
+  }
+}
+
+function handlePrediction(label) {
+  const labelToLane = {
+    'Left Hand': 0,
+    'Right Hand': 1
+  };
+  if (label in labelToLane) {
+    setPredictedLane(labelToLane[label]);
+  }
+}
