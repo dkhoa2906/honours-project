@@ -12,7 +12,7 @@ from pathlib import Path
 
 from torch.utils.data import TensorDataset, DataLoader
 from braindecode.models import EEGNet
-from bcg_core.classifier import EEGPreprocessor
+from bcg_core.classifier import EEGPreprocessor, RealtimeClassifier
 
 
 logging.basicConfig(level=logging.INFO)
@@ -50,22 +50,60 @@ class BCGServer:
         self._buf = []
         self._stream_ctr = 0
         self._loop = None
+        self._trials = []
+
+        # Track current trial
+        self._current_trial = None
 
         # Model
         self._clf = None
+
+        self._inference_wait_seconds = 0.0
 
         
     def _on_sample(self, sample: list):
         self._buf.append(sample)
 
+        # Prevent unbounded growth
+        if len(self._buf) > self._trial_samples * 4:
+            self._buf = self._buf[-self._trial_samples * 4:]
+
         self._stream_ctr += 1
-        if self._stream_ctr >= self._step_samples:
+
+        # Inference phase: send predictions
+        if self._phase == "inference" and self._clf:
+            if len(self._buf) < self._trial_samples:
+                return
+            if self._stream_ctr < self._step_samples:
+                return
+
             self._stream_ctr = 0
-            window = self._buf[-self._step_samples:]
-            asyncio.run_coroutine_threadsafe(
-                self.send({"type": "eeg_window", "data": window}),
-                self._loop
-            )
+            window = self._buf[-self._trial_samples:]
+            eeg = np.array(window, dtype=np.float32).T  
+
+            try:
+                label, conf = self._clf.predict(eeg)
+                asyncio.run_coroutine_threadsafe(
+                    self.send({
+                        "type": "prediction",
+                        "label": label,
+                        "confidence": round(conf, 2),
+                    }),
+                    self._loop,
+                )
+            except Exception as e:
+                logger.error(f"Prediction error: {e}")
+            return
+
+        # Collection phase: keep streaming eeg_window for debugging/game
+        if self._phase == "collection":
+            if self._stream_ctr >= self._step_samples:
+                self._stream_ctr = 0
+                window = self._buf[-self._step_samples:]
+                asyncio.run_coroutine_threadsafe(
+                    self.send({"type": "eeg_window", "data": window}),
+                    self._loop,
+                )
 
 
     async def send(self, msg: dict):
@@ -107,8 +145,10 @@ class BCGServer:
 
         if t == "ping":
             await self.send({"type": "pong"})
-        elif t == "trial_marker":
-            await self._handle_trial_marker(msg)
+        elif t == "trial_start":
+            await self._handle_trial_start(msg)
+        elif t == "trial_end":
+            await self._handle_trial_end(msg)
         elif t == "start_calibration":
             await self._handle_start_calibration()
         elif t == "start_inference":
@@ -117,28 +157,70 @@ class BCGServer:
             logger.warning(f"Unknown message type: {t}")
 
 
-    async def _handle_trial_marker(self, msg: dict):
+    async def _handle_trial_start(self, msg: dict):
         if self._phase != "collection":
             return
 
         label = msg.get("label")
-        if label not in ("Left Hand", "Right Hand"):
+        if label not in ("Left Hand", "Right Hand", "Rest"):
             await self.send({"type": "error", "message": f"Invalid label: {label}"})
             return
 
         trial_samples = int(self._sampling_rate * self._cfg["server"]["trial_seconds"])
 
-        if len(self._buf) < trial_samples:
-            await self.send({"type": "error", "message": "Buffer not full yet"})
+        self._current_trial = {
+        "label": label,
+        "start_idx": len(self._buf)
+        }
+        logger.info(f"Trial start: {label} at index {self._current_trial['start_idx']}")
+
+
+    async def _handle_trial_end(self, msg: dict):
+        if self._phase != "collection":
+            return
+        if not self._current_trial:
+            # End without start -> ignore
             return
 
-        eeg = self._buf[-trial_samples:]  
-        self._trials.append({"label": label, "eeg": eeg})
+        # Optionally check label consistency
+        end_label = msg.get("label", self._current_trial["label"])
+        if end_label != self._current_trial["label"]:
+            logger.warning(f"Label mismatch: start={self._current_trial['label']} end={end_label}")
 
+        start_idx = self._current_trial["start_idx"]
+        end_idx = len(self._buf)
+
+        window = self._buf[start_idx:end_idx]
+        n_samples = len(window)
+
+        if n_samples < int(self._trial_samples * 0.8):
+            logger.warning(f"Trial too short: {n_samples} / {self._trial_samples}")
+            await self.send({"type": "error", "message": "Trial window too short"})
+            self._current_trial = None
+            return
+
+        # Trim / pad to exact length
+        target = self._trial_samples
+        if n_samples > target:
+            window = window[-target:]
+        elif n_samples < target:
+            while len(window) < target:
+                window.append(window[-1])
+
+        eeg = np.array(window, dtype=np.float32).T
+        if eeg.shape[0] != self._n_channels:
+            logger.warning(f"Trial bad shape after slice: {eeg.shape}")
+            self._current_trial = None
+            return
+
+        self._trials.append({"label": self._current_trial["label"], "eeg": eeg})
         n = len(self._trials)
-        logger.info(f"Trial {n}: {label}")
+        logger.info(f"Trial {n}: {self._current_trial['label']} — shape={eeg.shape}")
+
+        # Notify client about count
         await self.send({"type": "trial_count", "count": n})
 
+        self._current_trial = None
 
     async def _handle_start_inference(self):
         if self._clf is None:
@@ -172,6 +254,24 @@ class BCGServer:
             self._phase = "collection"
             await self.send({"type": "phase_change", "phase": "collection"})
             await self.send({"type": "error", "message": str(e)})
+
+    def _load_classifier(self, model_path: str):
+        sr = self._cfg["preprocessing"]["sampling_rate"]
+        self._clf = RealtimeClassifier(
+            checkpoint_path = model_path,
+            n_channels = self._n_channels,
+            n_outputs = 3,
+            n_times = self._trial_samples,
+            confidence_threshold = self._cfg["live"]["confidence_threshold"],
+            preprocessing_config = {
+                "sampling_rate": sr,
+                "l_freq": 8,
+                "h_freq": 30,
+                "notch_freq": 50,
+            },
+        )
+        logger.info("✓ Classifier loaded for inference")
+
 
     def _run_calibration(self) -> str:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
