@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import torch
+import torch.nn.functional as F
 from pathlib import Path
 from typing import Tuple
 from scipy.signal import butter, filtfilt, iirnotch
@@ -50,6 +51,7 @@ class RealtimeClassifier:
         )
         cfg = preprocessing_config or {"sampling_rate": 128, "l_freq": 8, "h_freq": 30, "notch_freq": 50}
         self.preprocessor = EEGPreprocessor(**cfg)
+        self.n_times = n_times
         self.model = EEGNet(
             n_chans=n_channels, n_outputs=n_outputs,
             n_times=n_times, drop_prob=0.5
@@ -76,8 +78,15 @@ class RealtimeClassifier:
 
     def predict(self, eeg_window: np.ndarray) -> Tuple[str, float]:
         try:
-            x = self.preprocessor.process(eeg_window)
-            x = torch.tensor(x[np.newaxis], dtype=torch.float32).to(self.device)
+            x = self.preprocessor.process(eeg_window)          # (C, T_actual)
+            x = torch.tensor(x[np.newaxis], dtype=torch.float32).to(self.device)  # (1, C, T_actual)
+
+            # Resample to model's expected n_times if needed
+            if x.shape[-1] != self.n_times:
+                x = F.interpolate(x, size=self.n_times, mode='linear', align_corners=False)
+                if self.debug:
+                    logger.info(f"Resampled EEG window: {eeg_window.shape[-1]} -> {self.n_times} timepoints")
+
             with torch.no_grad():
                 probs = torch.softmax(self.model(x), dim=1)[0].cpu().numpy()
             idx    = int(np.argmax(probs))
@@ -93,4 +102,3 @@ class RealtimeClassifier:
         except Exception as e:
             logger.error(f"Prediction error: {e}")
             return "Rest", 0.0
-        
