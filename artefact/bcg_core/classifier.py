@@ -64,8 +64,14 @@ class RealtimeClassifier:
             state = raw.get("model_state_dict") or raw.get("state_dict") or raw
             fixed = {k.replace(".parametrizations.weight.original", ".weight"): v
                      for k, v in state.items()}
-            self.model.load_state_dict(fixed, strict=False)
-            logger.info(f"Loaded checkpoint: {ckpt}")
+            # Partial weight transfer: only copy layers with matching shapes
+            # bypasses braindecode's strict load_state_dict override
+            model_state = self.model.state_dict()
+            transferred = {k: v for k, v in fixed.items()
+                           if k in model_state and model_state[k].shape == v.shape}
+            model_state.update(transferred)
+            torch.nn.Module.load_state_dict(self.model, model_state, strict=True)
+            logger.info(f"Loaded checkpoint: {ckpt} — transferred {len(transferred)}/{len(fixed)} layers")
         else:
             logger.warning(f"Checkpoint not found: {ckpt} — using random weights")
 
