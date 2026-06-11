@@ -227,7 +227,7 @@ class MILiveWindow(QMainWindow):
         self._log_line("Session stopped")
 
     def closeEvent(self, event):
-        self._eeg_worker.stop_simulation()
+        self._eeg_worker.shutdown()
         super().closeEvent(event)
 
 

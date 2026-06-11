@@ -329,6 +329,14 @@ class DataCollectionWindow(QMainWindow):
     
 
     def _start_session(self):
+        if not self._config.recording.simulation_mode and not self._eeg_worker.can_record_now(timeout_sec=2.0):
+            status = self._eeg_worker.cortex_status()
+            logger.error("Cannot start session: %s", status)
+            self.lb_cue.setText("Cortex not ready")
+            self.lb_cue.setStyleSheet("color: #DC143C;")
+            self.lb_phase.setText(status)
+            return
+
         self.collected_eeg = []
         self.collected_labels = []
         self.current_trial = 0
@@ -341,7 +349,7 @@ class DataCollectionWindow(QMainWindow):
 
     def _stop_and_save(self):
         self._eeg_worker.stop_recording() 
-        self._eeg_worker.stop_simulation()
+        self._eeg_worker.shutdown()
         self.timer.stop()
         self.btn_save.setEnabled(False)
         self.btn_start.setEnabled(True)
@@ -362,7 +370,7 @@ class DataCollectionWindow(QMainWindow):
 
         from datetime import datetime
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_name = os.path.join(self.SAVE_PATH, f"data_session_{ts}.npz")
+        file_name = os.path.join(self.SAVE_PATH, f"graz_session_{ts}.npz")
 
         np.savez(
             file_name,
@@ -445,6 +453,14 @@ class DataCollectionWindow(QMainWindow):
         self.timer.stop()
 
         if self.phase == "prepare":
+            if not self._config.recording.simulation_mode and not self._eeg_worker.can_record_now():
+                status = self._eeg_worker.cortex_status()
+                logger.error("Skipping trial start because Cortex is not connected: %s", status)
+                self.lb_phase.setText("Cortex unavailable - trial skipped")
+                self.lb_cue.setStyleSheet("color: #DC143C;")
+                self.current_trial += 1
+                self._next_trial()
+                return
             self.lb_phase.setText("⬤  RECORDING")
             self._eeg_worker.start_recording(self._current_task_type)
             logger.info(">>> start_recording called")

@@ -3,6 +3,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import json
+from pathlib import Path
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout,
     QLabel, QPushButton, QSpacerItem, QSizePolicy
@@ -12,7 +13,7 @@ from PyQt6.QtGui import QFont
 from bcg_core.config_schema import AppConfig, DataCollectConfig
 from bcg_server.bcg_server_ui import BCGServerWindow
 
-
+BASE_DIR = Path(__file__).resolve().parent
 
 STYLE = """
 QWidget {
@@ -76,7 +77,7 @@ class LauncherWindow(QWidget):
 
     def _launch_collect(self):
         from bcg_collect.data_collect_ui import DataCollectionWindow
-        cfg_path = "config/datacollect_conf.json"
+        cfg_path = BASE_DIR / "config" / "datacollect_conf.json"
         with open(cfg_path) as f:
             config = DataCollectConfig.model_validate(json.load(f))
         self._child = DataCollectionWindow(config)
@@ -85,7 +86,7 @@ class LauncherWindow(QWidget):
 
     def _launch_live(self):
         from bcg_live.mi_live_ui import MILiveWindow
-        cfg_path = "config/milive_conf.json"
+        cfg_path = BASE_DIR / "config" / "milive_conf.json"
         with open(cfg_path) as f:
             config = AppConfig.model_validate(json.load(f))
         self._child = MILiveWindow(config)

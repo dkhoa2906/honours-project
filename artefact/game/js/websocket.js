@@ -44,8 +44,11 @@ function send(obj) {
 function handleServerMsg(msg) {
   if (msg.type === 'status' || msg.type === 'phase_change') {
     const badge = document.getElementById('phase-badge');
+    const overlay = document.getElementById('overlay-calibrating');
 
     if (!badge) return;
+
+    if (overlay) overlay.style.display = 'none';
 
     if (msg.phase === 'collection') {
       badge.textContent = 'COLLECTION';
@@ -53,6 +56,8 @@ function handleServerMsg(msg) {
     } else if (msg.phase === 'calibrating') {
       badge.textContent = 'CALIBRATING';
       badge.style.background = '#FFA500';
+      if (typeof stopGame === 'function') stopGame();
+      if (overlay) overlay.style.display = 'flex';
     } else if (msg.phase === 'inference') {
       badge.textContent = 'INFERENCE';
       badge.style.background = '#2E8B57';
@@ -78,6 +83,13 @@ function handleServerMsg(msg) {
   if (msg.type === 'calibration_done') {
     console.log('Calibration done, starting inference');
     send({ type: 'start_inference' });
+    return;
+  }
+
+  if (msg.type === 'session_saved') {
+    console.log('Session saved:', msg.path, 'trials=', msg.trials);
+    setInfo('info-phase', 'SAVED');
+    setInfo('info-trial', '—');
     return;
   }
 

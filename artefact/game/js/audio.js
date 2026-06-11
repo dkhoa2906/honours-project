@@ -43,8 +43,8 @@ function playNote() {
   const t = audioCtx.currentTime;
   gain.gain.setValueAtTime(0, t);
   gain.gain.linearRampToValueAtTime(0.5, t + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
   osc.start(t);
   osc.stop(t + 1.2);
 }

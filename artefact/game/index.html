@@ -9,17 +9,31 @@
 </head>
 
 <body>
+    <div id="bg-effects" aria-hidden="true">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="grid"></div>
+    </div>
 
     <!-- HEADER -->
-    <div id="header"">
-        <h1>BCG</h1>
-        <span id=" phase-badge">IDLE</span>
+    <div id="header">
+        <div id="brand">
+            <img id="brand-logo" src="./logo.svg" alt="BCG logo">
+            <div id="brand-text">
+                <h1>BCG Rhythm</h1>
+                <p>Brain Calibration Game</p>
+            </div>
+        </div>
+        <span id="phase-badge">IDLE</span>
     </div>
 
     <!-- GAME -->
     <div id="game-wrap">
 
         <canvas id="game" width="320" height="520"></canvas>
+        <div id="overlay-calibrating">
+            <div>CALIBRATING</div>
+        </div>
         <div id="lane-labels">
             <div class="lane-labels LEFT">Left</div>
             <div class="lane-labels RIGHT">Right</div>

@@ -10,7 +10,7 @@ const LANE_NAMES = ['LEFT', 'RIGHT'];
 
 // Tiles
 const TILE_W = LANE_W - 16;
-const TILE_H = 180;
+const TILE_H = 1300;
 const TILE_RADIUS = 6;
 const TILE_SPEED = 3;
 
@@ -19,13 +19,13 @@ const HIT_Y = CANVAS_H - 80;
 const HIT_H = 4;
 
 // Trial / collect
-const TRIALS_PER_CLASS = 10;
-const TRIAL_DURATION_MS = 2000;
+const TRIALS_PER_CLASS = 26;
+const TRIAL_DURATION_MS = 4000;
 const INTER_TRIAL_MS = 500;
 
 // Rest
 const REST_DEADZONE_MS = 500;
-const REST_DURATION_MS = 2000;
+const REST_DURATION_MS = 4000;
 
 // Timing
 const SPAWN_FRAMES = Math.round((HIT_Y + TILE_H) / TILE_SPEED);

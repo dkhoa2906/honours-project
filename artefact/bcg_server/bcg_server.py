@@ -9,9 +9,13 @@ import torch
 import torch.nn as nn
 import numpy as np
 from pathlib import Path
+from datetime import datetime
 
 from torch.utils.data import TensorDataset, DataLoader
-from braindecode.models import EEGNet
+try:
+    from braindecode.models import EEGNetv4 as EEGNet
+except ImportError:
+    from braindecode.models import EEGNet
 from bcg_core.classifier import EEGPreprocessor, RealtimeClassifier
 
 
@@ -66,6 +70,16 @@ class BCGServer:
         # Simulation thread
         self._running = False
         self._eeg_thread = None
+
+        # Saving
+        self._save_dir = Path(cfg.get("server", {}).get("save_dir") or (Path(__file__).parent.parent / "recordings"))
+        self._save_dir.mkdir(parents=True, exist_ok=True)
+        self._min_trials_to_save = cfg.get("server", {}).get("min_trials_to_save")
+        try:
+            self._min_trials_to_save = int(self._min_trials_to_save) if self._min_trials_to_save is not None else None
+        except Exception:
+            self._min_trials_to_save = None
+        self._ready_to_save_sent = False
         
     def _on_sample(self, sample: list):
         self._sample_counter += 1   
@@ -170,6 +184,8 @@ class BCGServer:
             await self._handle_trial_start(msg)
         elif t == "trial_end":
             await self._handle_trial_end(msg)
+        elif t == "save_game_session":
+            await self._handle_save_game_session(msg)
         elif t == "start_calibration":
             await self._handle_start_calibration()
         elif t == "start_inference":
@@ -259,7 +275,85 @@ class BCGServer:
         await self.send({"type": "trial_count", "count": n})
         self._emit("trial_count", n)
 
+        if (
+            (self._min_trials_to_save is not None)
+            and (not self._ready_to_save_sent)
+            and (n >= self._min_trials_to_save)
+        ):
+            self._ready_to_save_sent = True
+            await self.send({"type": "ready_to_save", "count": n, "min_trials": self._min_trials_to_save})
+
         self._current_trial = None
+
+    async def _handle_save_game_session(self, msg: dict):
+        if self._phase != "collection":
+            await self.send({"type": "error", "message": "Can only save during collection phase"})
+            return
+
+        min_trials = msg.get("min_trials")
+        if isinstance(min_trials, (int, float)) and int(min_trials) > 0:
+            min_trials = int(min_trials)
+            if len(self._trials) < min_trials:
+                await self.send({
+                    "type": "error",
+                    "message": f"Not enough trials to save: have {len(self._trials)} need {min_trials}",
+                })
+                return
+
+        try:
+            path = self._save_game_trials_npz()
+        except Exception as e:
+            logger.exception("Save failed")
+            await self.send({"type": "error", "message": f"Save failed: {e}"})
+            return
+
+        await self.send({"type": "session_saved", "method": "game", "path": str(path), "trials": len(self._trials)})
+        self._emit("log", f"✓ Saved game session → {path.name}")
+
+    def _save_game_trials_npz(self) -> Path:
+        # Trials store eeg as (n_ch, n_times). Save as (n_trials, n_times, n_ch) to match bcg_collect.
+        if not self._trials:
+            raise ValueError("No trials to save")
+
+        classes = self._cfg.get("live", {}).get("classes") or ["Left Hand", "Rest", "Right Hand"]
+        label_map = {cls: i for i, cls in enumerate(classes)}
+
+        eeg_list = []
+        y_list = []
+        for t in self._trials:
+            label = t.get("label")
+            if label not in label_map:
+                continue
+            eeg = t.get("eeg")
+            if not isinstance(eeg, np.ndarray):
+                eeg = np.asarray(eeg, dtype=np.float32)
+            if eeg.ndim != 2:
+                continue
+            # (n_ch, n_times) -> (n_times, n_ch)
+            eeg_list.append(eeg.T.astype(np.float32))
+            y_list.append(label_map[label])
+
+        if not eeg_list:
+            raise ValueError("No valid trials (label mismatch or bad shapes)")
+
+        eeg_arr = np.stack(eeg_list, axis=0).astype(np.float32)
+        labels_arr = np.asarray(y_list, dtype=np.int32)
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"bcg_game_session_{ts}.npz"
+        out_path = self._save_dir / file_name
+
+        np.savez(
+            out_path,
+            eeg_data=eeg_arr,
+            labels=labels_arr,
+            class_names=np.asarray(classes),
+            method=np.asarray("game"),
+            sampling_rate=np.asarray(int(self._sampling_rate)),
+            trial_seconds=np.asarray(float(self._cfg["server"]["trial_seconds"])),
+        )
+        logger.info(f"Saved game session → {out_path} ({len(labels_arr)} trials)")
+        return out_path
 
 
     async def _handle_start_calibration(self):
@@ -356,7 +450,8 @@ class BCGServer:
         if len(X_list) < 6:
             raise ValueError(f"Only {len(X_list)} valid trials — need at least 6")
 
-        X = torch.tensor(np.stack(X_list)[:, np.newaxis], dtype=torch.float32)
+        # EEGNet expects (batch, channels, timepoints) like in RealtimeClassifier.predict()
+        X = torch.tensor(np.stack(X_list), dtype=torch.float32)  # (N, C, T)
         y = torch.tensor(y_list, dtype=torch.long)
 
         # Imbalance handle
@@ -380,7 +475,8 @@ class BCGServer:
             transferred = {k: v for k, v in state.items()
                            if k in model_state and model_state[k].shape == v.shape}
             model_state.update(transferred)
-            model.load_state_dict(model_state)
+            # Some checkpoints may not fully match the current n_times / architecture.
+            model.load_state_dict(model_state, strict=False)
             logger.info(f"Transferred {len(transferred)} layers from pretrained")
         else:
             logger.warning("Pretrained model not found — using random weights")

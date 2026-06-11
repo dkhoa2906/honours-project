@@ -4,8 +4,8 @@ let frameId = null;
 
 let totalTrials = 0;
 const N_CLASSES = 3;
-const MIN_TRIALS_TO_CALIBRATE = TRIALS_PER_CLASS * N_CLASSES; 
-let calibrationRequested = false;
+const MIN_TRIALS_TO_SAVE = TRIALS_PER_CLASS * N_CLASSES; 
+let sessionSavedRequested = false;
 
 
 function createTile(lane) {
@@ -41,6 +41,7 @@ function buildTrialPool() {
 let frameCount = 0;  
 
 function spawnNext() {
+    if (!isRunning) return;
     if (trialIdx >= trialPool.length) { 
         stopGame(); 
         return; 
@@ -57,25 +58,35 @@ function update() {
 
     tiles.forEach(t => {
         t.y += TILE_SPEED;
-        const tileCenterY = t.y + TILE_H / 2;
+        const tileCenterY = t.y + TILE_H;
         
         if (!t.played && tileCenterY >= HIT_Y) {
             t.played = true;
             const label = labelMap[LANE_NAMES[t.lane]];
+
             send({ type: 'trial_start', label });
             setInfo('info-trial', label);
+            console.log(`[${Date.now()}] trial_start: ${label}`);
             playNote();
 
             setTimeout(() => {
                 send({ type: 'trial_end', label });
+                console.log(`[${Date.now()}] trial_end: ${label}`);
+                setInfo('info-trial', '—'); 
+                
                 setTimeout(() => {
                     send({ type: 'trial_start', label: 'Rest' });
                     setInfo('info-trial', 'Rest');
+                    console.log(`[${Date.now()}] trial_start: Rest`);
 
                     setTimeout(() => {
                         send({ type: 'trial_end', label: 'Rest' });
                         setInfo('info-trial', '—');
-                        setTimeout(() => spawnNext(), INTER_TRIAL_MS);
+                        console.log(`[${Date.now()}] trial_end: Rest`);
+
+                        setTimeout(() => {
+                            if (isRunning) spawnNext();
+                        }, INTER_TRIAL_MS);
                     }, REST_DURATION_MS);
                 }, REST_DEADZONE_MS);
             }, TRIAL_DURATION_MS);
@@ -111,9 +122,10 @@ document.getElementById('btn-start').addEventListener('click', startGame);
 
 function onTrialCountUpdate(count) {
   totalTrials = count;
-  if (!calibrationRequested && totalTrials >= MIN_TRIALS_TO_CALIBRATE) {
-    calibrationRequested = true;
-    send({ type: 'start_calibration' });
+  if (!sessionSavedRequested && totalTrials >= MIN_TRIALS_TO_SAVE) {
+    sessionSavedRequested = true;
+    send({ type: 'save_game_session', min_trials: MIN_TRIALS_TO_SAVE });
+    stopGame();
   }
 }
 

@@ -29,9 +29,31 @@ class EEGWorker(QObject):
             self._trial_samples = int(sr * 4)
 
         self._reader = CortexReader(config) if not self._simulation else None
+        if self._reader is not None:
+            # Real headset mode: wire callbacks and start Cortex stream immediately.
+            self._reader.on_sample = self.on_eeg_sample
+            logger.info("Starting CortexReader (real headset mode)")
+            self._reader.start()
         logger.info(f"EEGWorker created — simulation={self._simulation}")
 
+    def can_record_now(self, timeout_sec: float = 0.0) -> bool:
+        if self._reader is None:
+            return True
+        if timeout_sec > 0:
+            return self._reader.wait_until_connected(timeout_sec=timeout_sec)
+        return self._reader.connected
+
+    def cortex_status(self) -> str:
+        if self._reader is None:
+            return "Simulation mode enabled"
+        return self._reader.get_status_message()
+
     def start_recording(self, label: str = ""):
+        if self._reader is not None and not self._reader.connected:
+            logger.error("Cannot start recording: %s", self._reader.get_status_message())
+            self._recording = False
+            self._buffer = []
+            return
         self._buffer = []
         self._recording = True
         self._current_label = label
@@ -53,7 +75,11 @@ class EEGWorker(QObject):
         logger.info("Recording stopped")
 
     def on_eeg_sample(self, sample: list[float]):
-        self.sample_ready.emit(sample[:self._n_channels])
+        try:
+            self.sample_ready.emit(sample[:self._n_channels])
+        except RuntimeError:
+            # QObject already deleted (window closed); ignore late samples.
+            return
         if not self._recording:
             return
         self._buffer.append(sample[:self._n_channels])
@@ -69,10 +95,18 @@ class EEGWorker(QObject):
     def stop_simulation(self):
         self._sim_running = False
 
+    def shutdown(self):
+        self.stop_simulation()
+        if self._reader is not None:
+            self._reader.stop()
+
     def _simulate_loop(self):
         interval = 1.0 / 128
         while self._sim_running:
-            self.on_eeg_sample(self._generate_fake_sample())
+            try:
+                self.on_eeg_sample(self._generate_fake_sample())
+            except RuntimeError:
+                break
             time.sleep(interval)
 
     def _generate_fake_sample(self) -> list[float]:

@@ -1,0 +1,178 @@
+%-------------------------------------%
+% Birmingham City University
+% Joint Program with University of Information Technology, VNU-HCM
+% Module: Individual Honours Project
+% 
+% -----
+%
+% A Game-Based Approach to Motor Imagery Adaptation and BCI Calibration
+% Author: Cao Đăng Khoa (dang.cao@mail.bcu.ac.uk)
+% Student ID: 25195675
+%
+% Supervisor: Dr. Vi Chí Thành (vcthanh@hcmiu.edu.vn)
+%------------------------------------%
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{frontmatter}[2025/12/01 v1.0 Honours Project Report Front Matter]
+
+
+\RequirePackage{graphicx}
+\RequirePackage{dashrule}
+\RequirePackage{tocloft}
+
+% Title section command
+\newcommand{\reportTitle}[2]{
+    \begin{center}
+    \vspace*{2cm}
+    
+    \hdashrule{\textwidth}{1.5pt}{9pt} 
+    \vspace{1.5cm}
+    
+    {\fontsize{20}{24}\selectfont\bfseries CMP6200\par}
+    \vspace{0.3cm}
+
+    {\fontsize{20}{24}\selectfont\bfseries Individual Undergraduate Project\par}
+    \vspace{0.3cm}
+
+    {\fontsize{20}{24}\selectfont\bfseries #1\par}
+    \vspace{0.3cm}
+    
+    {\fontsize{20}{24}\selectfont\bfseries #2\par}
+    
+    \vspace{1.8cm}
+    \hdashrule{\textwidth}{1.5pt}{9pt}
+    \vspace{1.5cm}
+    \end{center}
+}
+
+% Student info section command
+\newcommand{\reportCredit}[5]{
+    \begin{flushleft}
+        {\fontsize{16.2}{18}\selectfont\bfseries Student Name:} {\fontsize{15.7}{18}\selectfont #1}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Student ID:} {\fontsize{15.7}{18}\selectfont #2}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Course:} {\fontsize{15.7}{18}\selectfont #3}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Supervisor:} {\fontsize{15.7}{18}\selectfont #4}\par
+        \vspace{0.45cm}
+        {\fontsize{16.2}{18}\selectfont\bfseries Date:} {\fontsize{15.7}{18}\selectfont\ #5}\par
+    \end{flushleft}
+    
+}
+
+% Combined command 
+\newcommand{\reportTitlePage}[7]{
+    \reportTitle{#1}{#2}
+    \reportCredit{#3}{#4}{#5}{#6}{#7}
+}
+
+% Abstract
+\newcommand{\reportAbstract}[1]{
+    \newpage
+    
+    % \vspace*{-2.1cm}
+    {\LARGE\bfseries\raggedright Abstract\par}
+    \addcontentsline{toc}{chapter}{Abstract}
+    \addtocontents{toc}{\vspace{-0.15cm}}
+    \thispagestyle{fancy}
+    \vspace{0.5cm}
+    \setstretch{1.5}
+    \setlength{\parskip}{9pt plus 2pt minus 1pt}
+    #1
+}
+
+
+% Acknowledgements
+\newcommand{\reportAcknowledgements}[1]{
+    \newpage
+    % \vspace*{-2.1cm}
+    {\LARGE\bfseries\raggedright Acknowledgements\par}
+    \addcontentsline{toc}{chapter}{Acknowledgements}
+    \addtocontents{toc}{\vspace{-0.15cm}}
+    \thispagestyle{fancy}
+    \vspace{0.5cm}
+    \setstretch{1.5}
+    \setlength{\parskip}{9pt plus 2pt minus 1pt}
+    #1
+}
+
+% Abbreviations
+\newcommand{\reportAbbreviations}[1]{
+    \newpage
+    % \vspace*{-2.1cm}
+    {\LARGE\bfseries\raggedright Abbreviations\par}
+    \addcontentsline{toc}{chapter}{Abbreviations}
+    \addtocontents{toc}{\vspace{-0.15cm}}
+    \thispagestyle{fancy}
+    \vspace{0.5cm}
+    \setstretch{1.5}
+    \setlength{\parskip}{9pt plus 2pt minus 1pt}
+    #1
+}
+
+
+% Table of Contents
+\newcommand{\reportTableOfContents}{
+    \newpage
+    \vspace*{-2.1cm}
+    \tableofcontents
+    \thispagestyle{fancy}
+}
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\cfttoctitlefont}{\LARGE\bfseries\raggedright} % Large bold, left-aligned title
+\renewcommand{\cftaftertoctitle}{\hfill\vspace{0.1cm}} % Add space after title
+\renewcommand{\cftchapfont}{\bfseries} % Large bold chapter entries
+\renewcommand{\cftchappagefont}{\bfseries} % Large bold chapter page numbers
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}} % Add dots for chapter entries
+\renewcommand{\cftchapnumwidth}{0.7cm} % Increase width for chapter numbers (adjust value as needed)
+\renewcommand{\cftsecfont}{} % Bold section entries
+\renewcommand{\cftsecpagefont}{} % Bold section page numbers
+\setlength{\cftbeforechapskip}{8pt} % Space before chapter entries
+\setlength{\cftbeforesecskip}{4pt} % Space before section entries
+
+\renewcommand{\cftsubsecfont}{} % Font for subsection entries
+\renewcommand{\cftsubsecpagefont}{} % Font for subsection page numbers
+\renewcommand{\cftsubsecnumwidth}{1cm}
+\setlength{\cftbeforesubsecskip}{4pt} % Space before subsection entries
+
+% List of Figures
+\newcommand{\reportListOfFigures}{
+    \newpage
+    \vspace*{-2.1cm}
+    \listoffigures
+    \addcontentsline{toc}{chapter}{List of Figures}
+    \addtocontents{toc}{\vspace{-0.15cm}}
+    \thispagestyle{fancy}
+}
+\renewcommand{\listfigurename}{List of Figures}
+\renewcommand{\cftloftitlefont}{\LARGE\bfseries\raggedright} % Large bold, left-aligned title
+\renewcommand{\cftafterloftitle}{\hfill\vspace{0.1cm}} % Add space after title
+\renewcommand{\cftfigfont}{\normalfont} % Normal font for figure entries
+\renewcommand{\cftfigpagefont}{\normalfont} % Normal font for figure page numbers
+\renewcommand{\cftfigpresnum}{Figure } % Add "Figure" prefix before number
+\renewcommand{\cftfignumwidth}{2.5cm} % Width for figure numbers (increased to fit "Figure X.X")
+\setlength{\cftbeforefigskip}{8pt} % Consistent spacing between figure entries
+
+% List of Tables
+\newcommand{\reportListOfTables}{
+    \newpage
+    \vspace*{-2.1cm}
+    \listoftables
+    \addcontentsline{toc}{chapter}{List of Tables}
+    \addtocontents{toc}{\vspace{-0.15cm}}
+    \thispagestyle{fancy}
+}
+\renewcommand{\listtablename}{List of Tables}
+\renewcommand{\cftlottitlefont}{\LARGE\bfseries\raggedright} % Large bold, left-aligned title
+\renewcommand{\cftafterlottitle}{\hfill\vspace{0.1cm}} % Add space after title
+\renewcommand{\cfttabfont}{\normalfont} % Normal font for table entries
+\renewcommand{\cfttabpagefont}{\normalfont} % Normal font for table page numbers
+\renewcommand{\cfttabpresnum}{Table } % Add "Table" prefix before number
+\renewcommand{\cfttabnumwidth}{2.5cm} % Width for table numbers (same as figures)
+\setlength{\cftbeforetabskip}{8pt} % Consistent spacing between table entries
+
+
+
+
