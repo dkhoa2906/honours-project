@@ -7,17 +7,23 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QProgressBar
 )
-from PyQt6.QtCore import Qt, QTimer, QObject, pyqtSignal
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 from bcg_core.config_schema import DataCollectConfig
 from bcg_core.eeg_worker import EEGWorker
+from bcg_core.paths import resolve_path
 
 import numpy as np
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class DataCollectionWindow(QMainWindow):
+    """Graz protocol window: per trial 1.0 s preparation (cue shown), 4.0 s recording, 2.5 s rest.
+
+    Class order is shuffled within each block; trial times come from a 50 ms QTimer.
+    STOP & SAVE writes ``graz_session_<timestamp>.npz`` (eeg_data, labels, class_names).
+    """
+
     def __init__(self, config: dict):
         super().__init__()
         self._config = config
@@ -77,7 +83,7 @@ class DataCollectionWindow(QMainWindow):
                 "text":    "#e0e0e0",
             }
 
-        self.SAVE_PATH = rec.save_path
+        self.SAVE_PATH = str(resolve_path(rec.save_path))
 
 
     def _build_ui(self):
@@ -329,6 +335,7 @@ class DataCollectionWindow(QMainWindow):
     
 
     def _start_session(self):
+        self._eeg_worker.ensure_running()   # STOP & SAVE shuts the sample source down
         if not self._config.recording.simulation_mode and not self._eeg_worker.can_record_now(timeout_sec=2.0):
             status = self._eeg_worker.cortex_status()
             logger.error("Cannot start session: %s", status)
@@ -551,10 +558,11 @@ class DataCollectionWindow(QMainWindow):
 
 if __name__ == "__main__":
     import json
-    from pathlib import Path
-    from bcg_core.config_schema import DataCollectConfig
+    from bcg_core.log import setup_logging
+    from bcg_core.paths import ROOT
 
-    with open("config/datacollect_conf.json") as f:
+    setup_logging()
+    with open(ROOT / "config" / "datacollect_conf.json") as f:
         config = DataCollectConfig.model_validate(json.load(f))
 
     app = QApplication(sys.argv)
