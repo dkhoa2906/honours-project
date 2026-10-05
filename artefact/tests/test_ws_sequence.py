@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """WebSocket sequence with a fake browser: session_start, trial_start/trial_end, save."""
 import asyncio
 import json

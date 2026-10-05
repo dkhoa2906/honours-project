@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Cortex packet -> 14 electrode channels (docs layout: COUNTER, INTERPOLATED, AF3..AF4, RAW_CQ, ...)."""
 import json
 

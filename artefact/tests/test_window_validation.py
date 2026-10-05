@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """80 % rule, pad (repeat last sample) and trim, for BOTH modules.
 
 Graz   (EEGWorker.stop_recording):  keeps the FIRST 512 samples, accepts >= 410 (80 % of 512 = 409.6).

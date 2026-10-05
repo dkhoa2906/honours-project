@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Saved-file schema: keys, dtypes and shapes for Graz and game sessions."""
 import numpy as np
 import pytest

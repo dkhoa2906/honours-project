@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import sys, glob, zipfile, numpy as np
 """Print keys, dtypes, shapes and value ranges of session files.
 Run: python tools/inspect_npz.py [file.npz ...]   (default: recordings/*.npz)"""

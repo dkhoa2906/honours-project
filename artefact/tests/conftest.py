@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Shared test setup: headless Qt, repo root on sys.path, helpers for the server tests."""
 import asyncio
 import os

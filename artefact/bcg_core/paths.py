@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Repository paths, so relative config values mean the same thing wherever the app is started."""
 from pathlib import Path
 

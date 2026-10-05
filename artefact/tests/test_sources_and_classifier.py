@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Sample source restart (Graz second session), classifier failure handling, config paths."""
 import time
 

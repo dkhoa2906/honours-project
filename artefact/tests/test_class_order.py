@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """One class order everywhere: 0 Left Hand, 1 Rest, 2 Right Hand."""
 import numpy as np
 import pytest

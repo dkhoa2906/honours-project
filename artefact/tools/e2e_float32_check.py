@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Run: python tools/e2e_float32_check.py [output_dir]
 
 End-to-end check of BCGServer with ndarray samples (as CortexReader emits: np.float32 arrays).

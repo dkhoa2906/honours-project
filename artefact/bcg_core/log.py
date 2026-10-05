@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """One logging setup for all apps (modules only call ``logging.getLogger(__name__)``)."""
 import logging
 

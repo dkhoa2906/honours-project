@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 from pydantic import BaseModel, Field, field_validator
 
 # Class coding used by every saved file, the calibration and the classifier output:

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 

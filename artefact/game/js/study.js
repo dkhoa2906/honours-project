@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Study settings: how many labeled trials a session collects before it is saved.
 //
 // Each tile gives one motor trial (Left or Right) followed by one Rest trial, so

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Which thread runs a plain-Python-method slot when the signal is emitted from a non-Qt thread?
 # Mirrors: EEGWorker(QObject).sample_ready (pyqtSignal(object)) -> BCGServer._on_sample (non-QObject method)
 import threading, sys

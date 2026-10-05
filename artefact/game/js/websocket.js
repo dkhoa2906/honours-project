@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 let ws = null;
 
 function setInfo(id, val) {

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """WebSocket ping -> pong round-trip time against the real BCGServer class (headless).
 
 This is the latency measurement reported in the paper: local machine, Python client,
