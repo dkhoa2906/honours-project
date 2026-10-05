@@ -9,3 +9,6 @@ main.bbl
 main.aux
 artefact/assets
 demo.mp4
+
+# model weights stay local
+*.pth
