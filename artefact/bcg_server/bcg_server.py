@@ -17,6 +17,7 @@ try:
 except ImportError:
     from braindecode.models import EEGNet
 from bcg_core.classifier import EEGPreprocessor, RealtimeClassifier
+from bcg_core.config_schema import CLASS_INDEX, CLASS_ORDER
 
 
 logging.basicConfig(level=logging.INFO)
@@ -208,7 +209,7 @@ class BCGServer:
             return
 
         label = msg.get("label")
-        if label not in ("Left Hand", "Right Hand", "Rest"):
+        if label not in CLASS_INDEX:
             await self.send({"type": "error", "message": f"Invalid label: {label}"})
             return
 
@@ -315,8 +316,8 @@ class BCGServer:
         if not self._trials:
             raise ValueError("No trials to save")
 
-        classes = self._cfg.get("live", {}).get("classes") or ["Left Hand", "Rest", "Right Hand"]
-        label_map = {cls: i for i, cls in enumerate(classes)}
+        classes = list(CLASS_ORDER)
+        label_map = CLASS_INDEX
 
         eeg_list = []
         y_list = []
@@ -433,7 +434,7 @@ class BCGServer:
 
     # ---> Prepare data
         preprocessor = EEGPreprocessor(sampling_rate=sr)
-        label_map = {"Left Hand": 0, "Right Hand": 1, "Rest": 2}
+        label_map = CLASS_INDEX
 
         X_list, y_list = [], []
         for trial in self._trials:

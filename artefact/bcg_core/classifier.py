@@ -5,8 +5,7 @@ import torch.nn.functional as F
 from pathlib import Path
 from typing import Tuple
 from scipy.signal import butter, filtfilt, iirnotch
-import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
+from bcg_core.config_schema import CLASS_ORDER
 
 
 try:
@@ -78,7 +77,7 @@ class RealtimeClassifier:
         self.debug = debug
         self.class_names = (
             ["Left Hand", "Right Hand"]         if n_outputs == 2 else
-            ["Left Hand", "Rest", "Right Hand"] if n_outputs == 3 else
+            list(CLASS_ORDER)                    if n_outputs == 3 else
             [f"Class {i}" for i in range(n_outputs)]
         )
 
