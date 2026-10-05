@@ -51,7 +51,7 @@ cp config/milive_conf.example.json      config/milive_conf.json
 cp config/server_conf.example.json      config/server_conf.json
 ```
 
-The example configs have `simulation_mode: true` and the Study 1 values for the Graz tool.
+The example configs have `simulation_mode: true` and the Study 1 values for the Graz tool. Model weights (`*.pth`) are not in the repository; the live monitor and the calibration code need `models/eegnet_finetuned_mimed.pth`, which you place there yourself. The collection tools do not need it.
 
 Run in **simulation mode** (no headset; emits fixed-value 14-channel samples at 128 Hz):
 
@@ -60,7 +60,7 @@ python main.py    # launcher: "Data Collect Tool" (Graz), "Live MI Monitor", "BC
 ```
 
 - Graz: click **Data Collect Tool**, then START. Press STOP & SAVE to write the file.
-- Game: click **BCG Game Server**, then **Start Server** (default address `localhost:8765`). Open `game/index.html` in a browser, click **Connect**, then **Start**. The repo has no web server for the game page.
+- Game: click **BCG Game Server**, then **Start Server** (default address `localhost:8765`). Open `game/index.html` in a browser, click **Connect**, then **Start**. The repo has no web server for the game page. Add `?preset=full_pool` to the page address for the longer session (see below).
 
 With a real headset: start Emotiv Launcher (Cortex listens on `wss://localhost:6868`), grant the app permission, set `"simulation_mode": false` in the config and put your Cortex `client_id` and `client_secret` under `cortex_api`. The real configs `config/*.json` are gitignored. Only the `*.example.json` files are tracked, with empty credentials. Never commit credentials.
 
@@ -98,12 +98,12 @@ print(X.shape, X.dtype, names[y[0]])   # (38, 512, 14) float32 Rest
 - Trial boundaries in the game have an unquantified timing error. Only the local WebSocket round trip was measured (0.9 ms on average, local machine, Python client).
 - Game and Graz sessions differ in length and in the number of motor trials (see the table above).
 - The Live MI Monitor and the classifier code are experimental and not part of the collection workflow.
-- Open issues (see `CHANGELOG.md` when it exists): the electrode columns taken from the Cortex packet have not been checked against the headset's column list; the calibration code maps classes differently from the classifier; the game saves only when the target trial count is reached.
+- Open issues: electrode columns are selected by name from the Cortex subscribe response, but this was tested only with fake packets built from the Cortex documentation, never with a headset; the Graz tool counts only trials that pass the 80 % rule and does not show how many were dropped.
 
 ## Reproducing the paper's setup
 
-- The Study 1 configuration is the default (preset name and config key: not yet implemented): 78 labeled trials per session. A second preset plays the game's full tile pool (52 motor and 52 Rest trials, about 10 minutes). Git tag `study1` marks the code used for the study.
-- Exact timings: see the protocol table above and `game/js/config.js` (game) and `config/datacollect_conf.example.json` (Graz).
+- The Study 1 configuration is the default (preset `study1` in `game/js/study.js`): 78 labeled trials per session. A second preset plays the game's full tile pool (52 motor and 52 Rest trials, about 10 minutes). Git tag `study1` marks the code used for the study.
+- Exact settings and timings: `STUDY1.md`. What changed since the study: `CHANGELOG.md`. Tests: `pip install -r requirements-dev.txt && pytest`.
 
 ## Repository layout
 
@@ -115,8 +115,9 @@ bcg_server/       WebSocket game server and its window
 bcg_live/         Live MI Monitor (experimental)
 game/             browser game (index.html, js/, css/)
 config/           *.example.json templates; real configs are gitignored
-models/           pretrained EEGNet weights
+models/           place EEGNet weights here (not tracked)
 recordings/       saved sessions (gitignored)
+tests/, tools/    pytest suite; latency, thread and file-inspection scripts
 ```
 
 ## Acknowledgements
@@ -125,4 +126,4 @@ Brain-Life Link Technology JSC lent the EEG headset. Emotiv sponsored the softwa
 
 ## License
 
-BCG is released under the GNU General Public License v3.0 or later (GPL-3.0-or-later). See `LICENSE`. Third-party logos and trademarks (for example Emotiv) remain the property of their owners and are not covered by this license.
+BCG is released under the GNU General Public License v3.0 or later (GPL-3.0-or-later). See `LICENSE` and `THIRD_PARTY.md`. Third-party logos and trademarks (for example Emotiv) remain the property of their owners and are not covered by this license.
