@@ -17,12 +17,11 @@ except ImportError:
     from braindecode.models import EEGNet
 from bcg_core.classifier import EEGPreprocessor, RealtimeClassifier
 from bcg_core.config_schema import CLASS_INDEX, CLASS_ORDER
+from bcg_core.paths import ROOT, resolve_path
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = ROOT / "config" / "server_conf.json"
 
 def load_config():
@@ -67,7 +66,7 @@ class BCGServer:
         self._clf = None
 
         # Saving
-        self._save_dir = Path(cfg.get("server", {}).get("save_dir") or (ROOT / "recordings"))
+        self._save_dir = resolve_path(cfg.get("server", {}).get("save_dir") or "recordings")
         self._save_dir.mkdir(parents=True, exist_ok=True)
         self._min_trials_to_save = cfg.get("server", {}).get("min_trials_to_save")
         try:
@@ -113,11 +112,14 @@ class BCGServer:
             eeg = np.array(window, dtype=np.float32).T
             try:
                 label, conf = self._clf.predict(eeg)
-                self._schedule({
-                    "type": "prediction",
-                    "label": label,
-                    "confidence": round(conf, 2),
-                })
+                if label is None:      # classifier failed: report it, do not pretend it was Rest
+                    self._schedule({"type": "error", "message": "Prediction failed (see server log)"})
+                else:
+                    self._schedule({
+                        "type": "prediction",
+                        "label": label,
+                        "confidence": round(conf, 2),
+                    })
             except Exception as e:
                 logger.error(f"Prediction error: {e}")
         elif mode == "collection":
@@ -499,8 +501,8 @@ class BCGServer:
         epochs = self._cfg["server"]["calibration_epochs"]
         n_times = int(sr * self._cfg["server"]["trial_seconds"])
 
-        pretrained_path = Path(__file__).parent / self._cfg["live"]["model_path"]
-        output_path = Path(__file__).parent / "models" / "eegnet_game_calibrated.pth"
+        pretrained_path = resolve_path(self._cfg["live"]["model_path"])
+        output_path = ROOT / "models" / "eegnet_game_calibrated.pth"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # ---> Prepare data

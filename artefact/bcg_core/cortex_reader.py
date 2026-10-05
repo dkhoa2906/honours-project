@@ -365,9 +365,11 @@ class CortexReader:
 
     
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    from bcg_core.log import setup_logging
+    from bcg_core.paths import ROOT
 
-    with open ("config/milive_conf.json") as f:
+    setup_logging()
+    with open(ROOT / "config" / "milive_conf.json") as f:
         config = AppConfig.model_validate(json.load(f))
 
     reader = CortexReader(config)

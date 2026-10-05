@@ -3,9 +3,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 from scipy.signal import butter, filtfilt, iirnotch
 from bcg_core.config_schema import CLASS_ORDER
+from bcg_core.paths import ROOT
 
 
 try:
@@ -17,12 +18,19 @@ logger = logging.getLogger(__name__)
 
 
 class EEGPreprocessor:
+    """Offline/live preprocessing for the classifier. NOT applied to saved sessions.
+
+    Per channel: 5th-order Butterworth band-pass (default 8-30 Hz) and a 50 Hz notch
+    (Q=30), both zero-phase (``filtfilt``), then z-scoring over the window.
+    """
+
     def __init__(self, sampling_rate=128, l_freq=8, h_freq=30, notch_freq=50):
         nyq = sampling_rate / 2
         self.b_bp, self.a_bp = butter(5, [l_freq/nyq, h_freq/nyq], btype="band")
         self.b_n,  self.a_n  = iirnotch(notch_freq, Q=30, fs=sampling_rate)
 
     def process(self, eeg: np.ndarray) -> np.ndarray:
+        """Filter and normalise ``eeg`` of shape (n_channels, n_times); returns float32, same shape."""
         x = eeg.copy().astype(np.float32)
         for ch in range(x.shape[0]):
             x[ch] = filtfilt(self.b_bp, self.a_bp, x[ch])
@@ -33,6 +41,11 @@ class EEGPreprocessor:
 
 
 class RealtimeClassifier:
+    """EEGNet wrapper that preprocesses a window and returns (class name, confidence %).
+
+    Experimental: not part of the data-collection workflow.
+    """
+
     def __init__(
         self,
         checkpoint_path: str,
@@ -58,6 +71,8 @@ class RealtimeClassifier:
         self.model.eval()
 
         ckpt = Path(checkpoint_path)
+        if not ckpt.is_absolute() and not ckpt.exists():
+            ckpt = ROOT / ckpt          # relative paths in configs are relative to the repository
         if ckpt.exists():
             raw   = torch.load(ckpt, map_location=self.device)
             state = raw.get("model_state_dict") or raw.get("state_dict") or raw
@@ -81,7 +96,13 @@ class RealtimeClassifier:
             [f"Class {i}" for i in range(n_outputs)]
         )
 
-    def predict(self, eeg_window: np.ndarray) -> Tuple[str, float]:
+    def predict(self, eeg_window: np.ndarray) -> Tuple[Optional[str], float]:
+        """Classify one window of shape (n_channels, n_times).
+
+        Returns ``(label, confidence_percent)``. A margin below 0.2 between the two best
+        classes gives ("Rest", margin*100). If anything fails the result is ``(None, 0.0)``:
+        "no prediction", which callers must not treat as Rest.
+        """
         try:
             x = self.preprocessor.process(eeg_window)          # (C, T_actual)
             x = torch.tensor(x[np.newaxis], dtype=torch.float32).to(self.device)  # (1, C, T_actual)
@@ -106,4 +127,4 @@ class RealtimeClassifier:
             return self.class_names[idx], float(probs[idx]) * 100.0
         except Exception as e:
             logger.error(f"Prediction error: {e}")
-            return "Rest", 0.0
+            return None, 0.0
