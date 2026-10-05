@@ -10,9 +10,9 @@
         "trial_seconds": 4.0,
         "prepare_seconds": 1.0,
         "rest_seconds": 2.5,
-        "break_seconds": 30,
-        "n_blocks": 6,
-        "trials_per_block": 10,
+        "break_seconds": 0,
+        "n_blocks": 1,
+        "trials_per_block": 26,
         "labels": ["Left Hand", "Rest", "Right Hand"],
         "colors": {
             "Left Hand":  "#4169E1",
@@ -20,6 +20,6 @@
             "Rest":       "#2E8B57"
         },
         "save_path": "recordings",
-        "simulation_mode": false
+        "simulation_mode": true
     }
 }

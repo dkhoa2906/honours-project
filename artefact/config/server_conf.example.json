@@ -1,0 +1,32 @@
+{
+    "cortex_api": {
+        "client_id": "",
+        "client_secret": ""
+    },
+    "preprocessing": {
+        "sampling_rate": 128
+    },
+    "model": {
+        "n_channels": 14,
+        "buffer_seconds": 4
+    },
+    "live": {
+        "simulation_mode": true,
+        "model_path": "models/eegnet_finetuned_mimed.pth",
+        "step_samples": 64,
+        "n_outputs": 3,
+        "confidence_threshold": 0.5,
+        "classes": ["Left Hand", "Rest", "Right Hand"],
+        "colors": {
+            "Left Hand":  "#4169E1",
+            "Rest":       "#2E8B57",
+            "Right Hand": "#DC143C"
+        }
+    },
+    "server": {
+        "host": "localhost",
+        "port": 8765,
+        "trial_seconds": 4.0,
+        "calibration_epochs": 150
+    }
+}

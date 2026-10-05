@@ -9,9 +9,9 @@
     "model": {
         "n_channels": 14
     },
-     "live": {
+    "live": {
         "simulation_mode": true,
-        "model_path": "model/weights/eegnet_finetuned_mimed.pth",
+        "model_path": "models/eegnet_finetuned_mimed.pth",
         "step_samples": 64,
         "n_outputs": 2,
         "confidence_threshold": 0.5,

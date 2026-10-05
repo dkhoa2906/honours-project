@@ -1,9 +1,11 @@
-config/datacollect_conf.json
-config/milive_conf.json
-config/server_conf.json
+# real configs hold Emotiv credentials; only *.example.json is tracked
+config/*.json
+!config/*.example.json
 
 
 __pycache__
 .vscode
 
 recordings/
+
+.claude/
