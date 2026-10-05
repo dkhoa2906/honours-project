@@ -122,7 +122,7 @@ tests/, tools/    pytest suite; latency, thread and file-inspection scripts
 
 ## Acknowledgements
 
-Brain-Life Link Technology JSC lent the EEG headset. Emotiv sponsored the software license.
+The authors would like to thank the volunteers who took part in the user study for their time. This work was supported in part by Brain-Life Link Technology JSC, which lent the EEG headset and gave the opportunity to test other EEG devices, and by Emotiv, which sponsored the software license that gave access to raw EEG data. A part of this work was carried out as the first author's Honours project (module CMP6200) at Birmingham City University.
 
 ## License
 

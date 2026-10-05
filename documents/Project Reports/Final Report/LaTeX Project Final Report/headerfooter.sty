@@ -1,0 +1,50 @@
+%-------------------------------------%
+% Birmingham City University
+% Joint Program with University of Information Technology, VNU-HCM
+% Module: Individual Honours Project
+% 
+% -----
+%
+% A Game-Based Approach to Motor Imagery Adaptation and BCI Calibration
+% Author: Cao Đăng Khoa (dang.cao@mail.bcu.ac.uk)
+% Student ID: 25195675
+%
+% Supervisor: Dr. Vi Chí Thành (vcthanh@hcmiu.edu.vn)
+%------------------------------------%
+
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{headerfooter}[2025/12/01 v1.0 Honours Project Report Header/Footer]
+
+
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+
+% Fix headheight warning
+\setlength{\headheight}{38.22325pt}
+\addtolength{\topmargin}{-2.84325pt}
+
+\pagestyle{fancy}
+
+% Clear all headers and footers first
+\fancyhf{}
+
+% Set the header: logo on the right
+\fancyhead[R]{\includegraphics[height=1.1cm]{./Logo/bcu-logo.pdf}}
+
+% Set the footer: page number in the center
+\fancyfoot[C]{\thepage}
+
+% Remove header and footer lines
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Custom page style: header only, no page number
+\fancypagestyle{titlepage}{%
+  \fancyhf{}
+  \fancyhead[R]{\includegraphics[height=1.2cm]{./Logo/bcu-logo.pdf}}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+

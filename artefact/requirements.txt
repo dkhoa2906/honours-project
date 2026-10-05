@@ -1,11 +1,3 @@
-# Frozen from venv/ (Python 3.13.2, macOS) with `python -m pip freeze`, then edited:
-#  - removed `websocket==0.2.1` (an unrelated gevent package that shares the `websocket` module
-#    name with websocket-client and can overwrite it; the code needs websocket-client, which
-#    provides `websocket.WebSocketApp` in bcg_core/cortex_reader.py)
-#  - removed gevent, greenlet, zope.event, zope.interface (installed only as dependencies of that package)
-#  - added `websockets` (used by bcg_server/bcg_server.py; it was missing from the venv).
-#    17.2.0 is the version used by the tests and tools/ws_rtt.py.
-# The list also holds packages used only by the notebooks in ../model (mne, wfdb, skorch, ...).
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.5
 aiosignal==1.4.0
