@@ -3,8 +3,7 @@ let isRunning = false;
 let frameId = null;
 
 let totalTrials = 0;
-const N_CLASSES = 3;
-const MIN_TRIALS_TO_SAVE = TRIALS_PER_CLASS * N_CLASSES; 
+const MIN_TRIALS_TO_SAVE = LABELED_TRIALS;   // from study.js (preset study1 = 78, full_pool = 104)
 let sessionSavedRequested = false;
 
 
@@ -42,9 +41,15 @@ let frameCount = 0;
 
 function spawnNext() {
     if (!isRunning) return;
-    if (trialIdx >= trialPool.length) { 
-        stopGame(); 
-        return; 
+    if (trialIdx >= trialPool.length) {
+        // Pool used up before MIN_TRIALS_TO_SAVE labeled trials were accepted: save what exists.
+        if (!sessionSavedRequested) {
+            sessionSavedRequested = true;
+            console.warn(`Pool exhausted with ${totalTrials}/${MIN_TRIALS_TO_SAVE} trials, saving incomplete session`);
+            send({ type: 'save_game_session', min_trials: MIN_TRIALS_TO_SAVE, allow_incomplete: true });
+        }
+        stopGame();
+        return;
     }
     const lane = trialPool[trialIdx++];
     tiles.push(createTile(lane));
@@ -103,6 +108,10 @@ function loop() {
 }
 
 function startGame() {
+    if (isRunning) return;           // a second click must not start a second loop
+    totalTrials = 0;
+    sessionSavedRequested = false;
+    send({ type: 'session_start' }); // server forgets trials of any earlier, unsaved session
     trialPool = buildTrialPool();
     trialIdx = 0;
     tiles = [];
