@@ -14,11 +14,68 @@ from bcg_core.config_schema import AppConfig
 
 logger = logging.getLogger(__name__)
 
+# Electrode columns of the Cortex "eeg" stream, in the order BCG saves them.
+# The raw packet is [COUNTER, INTERPOLATED, AF3, ..., AF4, RAW_CQ, MARKER_HARDWARE, ...]
+# (Emotiv Cortex API documentation), so the electrodes start at index 2, not 1.
+ELECTRODES = ["AF3", "F7", "F3", "FC5", "T7", "P7", "O1",
+              "O2", "P8", "T8", "FC6", "F4", "F8", "AF4"]
+FALLBACK_FIRST_COLUMN = 2
+
+
+def stream_names(result) -> list[str]:
+    """Stream names confirmed by a Cortex ``subscribe`` result.
+
+    Cortex lists successes as dicts (``{"streamName": "eeg", "cols": [...]}``); plain
+    strings are accepted too.
+    """
+    if not isinstance(result, dict):
+        return []
+    items = result.get("success", []) or result.get("streams", [])
+    return [i.get("streamName") if isinstance(i, dict) else i for i in items]
+
+
+def eeg_columns(result) -> Optional[list[str]]:
+    """Column names (``cols``) of the eeg stream in a ``subscribe`` result, or None."""
+    if not isinstance(result, dict):
+        return None
+    for item in result.get("success", []) or []:
+        if isinstance(item, dict) and item.get("streamName") == "eeg":
+            cols = item.get("cols")
+            return list(cols) if cols else None
+    return None
+
+
+def electrode_indices(cols, n_channels: int) -> tuple[Optional[list[int]], str]:
+    """Indices of the first ``n_channels`` electrodes of ELECTRODES inside ``cols``.
+
+    Returns ``(indices, description)``. ``indices`` is None when ``cols`` is missing or does
+    not contain every wanted electrode; the caller then uses the fixed fallback slice.
+    """
+    wanted = ELECTRODES[:n_channels]
+    if cols and len(wanted) == n_channels and all(name in cols for name in wanted):
+        indices = [list(cols).index(name) for name in wanted]
+        return indices, f"by name from subscribe cols: {dict(zip(wanted, indices))}"
+    fallback = f"[{FALLBACK_FIRST_COLUMN}:{FALLBACK_FIRST_COLUMN + n_channels}]"
+    return None, f"fallback slice {fallback} (electrode names not found in cols={cols!r})"
+
+
+def extract_electrodes(eeg_packet, indices: Optional[list[int]], n_channels: int) -> np.ndarray:
+    """Pick the electrode values out of one Cortex ``eeg`` array as float32 (n_channels,)."""
+    if indices is not None:
+        values = [eeg_packet[i] for i in indices]
+    else:
+        values = eeg_packet[FALLBACK_FIRST_COLUMN:FALLBACK_FIRST_COLUMN + n_channels]
+    return np.array(values, dtype=np.float32)
+
 
 class CortexReader:
+    """Connects to the local Cortex service and calls ``on_sample`` with one
+    float32 array (n_channels,) per EEG sample."""
+
     def __init__(self, config: AppConfig):
         self.connected = False
         self._config = config
+        self._eeg_indices: Optional[list[int]] = None
 
         self._ws = None
         self._ws_thread = None
@@ -46,6 +103,7 @@ class CortexReader:
         self._token = ""
         self._headset_id = ""
         self._session_id = ""
+        self._eeg_indices = None
         self._pending_requests.clear()
         self._next_rpc_id = 1
         self.last_error = None
@@ -117,11 +175,10 @@ class CortexReader:
 
         # EEG data stream
         if "eeg" in data:
-            sample = np.array(
-                data["eeg"][1:self._config.model.n_channels+1], 
-                dtype=np.float32
+            sample = extract_electrodes(
+                data["eeg"], self._eeg_indices, self._config.model.n_channels
             )
-        
+
             if self.on_sample:
                 self.on_sample(sample)
             return
@@ -194,12 +251,13 @@ class CortexReader:
                 },
             )
         elif req_method == "subscribe":
-            success_streams = []
-            if isinstance(result, dict):
-                success_streams = result.get("success", []) or result.get("streams", [])
-            if not success_streams or "eeg" not in success_streams:
+            if "eeg" not in stream_names(result):
                 self._mark_error(f"Subscribe did not confirm EEG stream: {data}")
                 return
+            self._eeg_indices, how = electrode_indices(
+                eeg_columns(result), self._config.model.n_channels
+            )
+            logger.info(f"EEG electrode columns: {how}")
             self.connected = True
             self.last_error = None
             self._set_state("streaming")
