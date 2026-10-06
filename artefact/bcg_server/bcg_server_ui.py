@@ -1,8 +1,8 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import asyncio
 import json
 import logging
 import threading
-from pathlib import Path
 
 
 from PyQt6.QtWidgets import (
@@ -14,6 +14,7 @@ from PyQt6.QtGui import QFont
 
 from bcg_core.config_schema import AppConfig
 from bcg_core.eeg_worker import EEGWorker
+from bcg_core.paths import ROOT
 from bcg_server import BCGServer
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,12 @@ class ServerSignals(QObject):
 
 
 class BCGServerWindow(QMainWindow):
+    """Window that runs the game WebSocket server (ws://localhost:8765 by default).
+
+    The EEG source (``EEGWorker``) feeds samples to ``BCGServer._on_sample``; the server
+    itself runs on a background asyncio thread. ``ServerSignals`` carry its log and counts.
+    """
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BCG Game Server")
@@ -224,7 +231,7 @@ class BCGServerWindow(QMainWindow):
         addr = self._input_addr.text().strip()
         host, port = addr.split(":") if ":" in addr else ("localhost", "8765")
 
-        cfg_path = Path(__file__).parent.parent / "config" / "server_conf.json"
+        cfg_path = ROOT / "config" / "server_conf.json"
         with open(cfg_path) as f:
             cfg = json.load(f)
 

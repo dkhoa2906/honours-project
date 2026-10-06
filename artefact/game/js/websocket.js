@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 let ws = null;
 
 function setInfo(id, val) {
@@ -87,8 +88,9 @@ function handleServerMsg(msg) {
   }
 
   if (msg.type === 'session_saved') {
-    console.log('Session saved:', msg.path, 'trials=', msg.trials);
-    setInfo('info-phase', 'SAVED');
+    console.log('Session saved:', msg.path, 'trials=', msg.trials, 'complete=', msg.complete);
+    setInfo('info-phase', msg.complete === false
+      ? `SAVED INCOMPLETE ${msg.trials}/${msg.required}` : 'SAVED');
     setInfo('info-trial', '—');
     return;
   }

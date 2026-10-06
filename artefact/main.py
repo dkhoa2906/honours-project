@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -11,6 +12,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 from bcg_core.config_schema import AppConfig, DataCollectConfig
+from bcg_core.log import setup_logging
 from bcg_server.bcg_server_ui import BCGServerWindow
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -100,6 +102,7 @@ class LauncherWindow(QWidget):
 
 
 if __name__ == "__main__":
+    setup_logging()
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     win = LauncherWindow()

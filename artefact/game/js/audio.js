@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const MELODY = [
   // Phrase 1
   329.63, 329.63, 349.23, 392.00, // E E F G

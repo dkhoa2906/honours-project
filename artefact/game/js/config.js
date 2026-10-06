@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Canvas
 const CANVAS_W = 320;
 const CANVAS_H = 520;

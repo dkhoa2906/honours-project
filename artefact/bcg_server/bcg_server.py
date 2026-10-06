@@ -1,8 +1,8 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import asyncio
 import json
 import logging
 import threading
-import time
 import websockets
 import torch
 
@@ -17,12 +17,13 @@ try:
 except ImportError:
     from braindecode.models import EEGNet
 from bcg_core.classifier import EEGPreprocessor, RealtimeClassifier
+from bcg_core.config_schema import CLASS_INDEX, CLASS_ORDER
+from bcg_core.paths import ROOT, resolve_path
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-CONFIG_PATH = Path(__file__).parent.parent / "config" / "server_conf.json"
+CONFIG_PATH = ROOT / "config" / "server_conf.json"
 
 def load_config():
     with open(CONFIG_PATH) as f:
@@ -44,35 +45,29 @@ class BCGServer:
         self._n_channels = cfg["model"]["n_channels"]
         self._step_samples = cfg["live"]["step_samples"]
         self._simulation = cfg["live"]["simulation_mode"]
-        self._trials = []
         self._trial_samples = int(
             cfg["preprocessing"]["sampling_rate"] * cfg["server"]["trial_seconds"]
         )
-        self._sample_counter = 0
+        # _on_sample runs on the Qt thread, the message handlers on the asyncio thread.
+        # Everything they share (_buf, _sample_counter, _stream_ctr) is guarded by this lock.
+        self._buf_lock = threading.Lock()
+        self._sample_counter = 0   # one count per EEG sample, never reset
+        self._buf = []
+        self._stream_ctr = 0
 
         # State
         self._client = None
         self._phase = "collection"
-        self._buf = []
-        self._stream_ctr = 0
         self._loop = None
-        self._trials = []
-        self._current_trial = None
-
-        # Track current trial
-        self._current_trial = None
+        self._trials = []          # accepted trials: {"label": str, "eeg": (n_ch, n_times)}
+        self._current_trial = None # {"label", "start_counter"} between trial_start and trial_end
+        self._rejected = {"too_short": 0, "wrong_shape": 0}
 
         # Model
         self._clf = None
 
-        self._inference_wait_seconds = 0.0
-        
-        # Simulation thread
-        self._running = False
-        self._eeg_thread = None
-
         # Saving
-        self._save_dir = Path(cfg.get("server", {}).get("save_dir") or (Path(__file__).parent.parent / "recordings"))
+        self._save_dir = resolve_path(cfg.get("server", {}).get("save_dir") or "recordings")
         self._save_dir.mkdir(parents=True, exist_ok=True)
         self._min_trials_to_save = cfg.get("server", {}).get("min_trials_to_save")
         try:
@@ -80,55 +75,64 @@ class BCGServer:
         except Exception:
             self._min_trials_to_save = None
         self._ready_to_save_sent = False
-        
-    def _on_sample(self, sample: list):
-        self._sample_counter += 1   
-        if len(self._buf) % 50 == 0:
-            logger.info(f"Buffer size: {len(self._buf)}")
-        self._buf.append(sample)
-        log_eeg = f"{len(self._buf)} | " + " ".join(f"{v:.1f}" for v in sample[:4])
-        self._emit("eeg", log_eeg)
 
-        # Prevent unbounded growth
-        if len(self._buf) > self._trial_samples * 4:
-            self._buf = self._buf[-self._trial_samples * 4:]
+    def _on_sample(self, sample):
+        """Receive one EEG sample (sequence of n_channels floats).
 
-        self._stream_ctr += 1
+        Increments the sample counter that trial boundaries are measured with, keeps the
+        last 4 trial lengths in ``_buf`` and, every ``step_samples`` samples, streams the
+        newest window to the browser (collection) or to the classifier (inference).
+        """
+        with self._buf_lock:
+            self._sample_counter += 1
+            if len(self._buf) % 50 == 0:
+                logger.info(f"Buffer size: {len(self._buf)}")
+            self._buf.append(sample)
+            buf_len = len(self._buf)
 
-        # Inference phase: send predictions
-        if self._phase == "inference" and self._clf:
-            if len(self._buf) < self._trial_samples:
-                return
-            if self._stream_ctr < self._step_samples:
-                return
+            # Prevent unbounded growth
+            if buf_len > self._trial_samples * 4:
+                self._buf = self._buf[-self._trial_samples * 4:]
 
-            self._stream_ctr = 0
-            window = self._buf[-self._trial_samples:]
-            eeg = np.array(window, dtype=np.float32).T  
+            self._stream_ctr += 1
 
+            window, mode = None, None
+            if self._phase == "inference" and self._clf:
+                if len(self._buf) >= self._trial_samples and self._stream_ctr >= self._step_samples:
+                    self._stream_ctr = 0
+                    window, mode = self._buf[-self._trial_samples:], "inference"
+            elif self._phase == "collection":
+                # keep streaming eeg_window for debugging/game
+                if self._stream_ctr >= self._step_samples:
+                    self._stream_ctr = 0
+                    window, mode = self._buf[-self._step_samples:], "collection"
+
+        self._emit("eeg", f"{buf_len} | " + " ".join(f"{v:.1f}" for v in sample[:4]))
+
+        if mode == "inference":
+            eeg = np.array(window, dtype=np.float32).T
             try:
                 label, conf = self._clf.predict(eeg)
-                asyncio.run_coroutine_threadsafe(
-                    self.send({
+                if label is None:      # classifier failed: report it, do not pretend it was Rest
+                    self._schedule({"type": "error", "message": "Prediction failed (see server log)"})
+                else:
+                    self._schedule({
                         "type": "prediction",
                         "label": label,
                         "confidence": round(conf, 2),
-                    }),
-                    self._loop,
-                )
+                    })
             except Exception as e:
                 logger.error(f"Prediction error: {e}")
-            return
+        elif mode == "collection":
+            # samples may be float32 arrays (CortexReader); JSON needs plain floats
+            self._schedule({"type": "eeg_window",
+                            "data": np.asarray(window, dtype=np.float64).tolist()})
 
-        # Collection phase: keep streaming eeg_window for debugging/game
-        if self._phase == "collection":
-            if self._stream_ctr >= self._step_samples:
-                self._stream_ctr = 0
-                window = self._buf[-self._step_samples:]
-                asyncio.run_coroutine_threadsafe(
-                    self.send({"type": "eeg_window", "data": window}),
-                    self._loop,
-                )
+    def _schedule(self, msg: dict):
+        """Send ``msg`` from a non-asyncio thread; dropped while the server loop is not running."""
+        if self._loop is None:
+            return
+        asyncio.run_coroutine_threadsafe(self.send(msg), self._loop)
 
     def _emit(self, name: str, *args):
         if self._signals is None:
@@ -180,6 +184,8 @@ class BCGServer:
 
         if t == "ping":
             await self.send({"type": "pong"})
+        elif t == "session_start":
+            await self._handle_session_start()
         elif t == "trial_start":
             await self._handle_trial_start(msg)
         elif t == "trial_end":
@@ -203,25 +209,63 @@ class BCGServer:
         async with websockets.serve(self._handler, self._host, self._port):
             await asyncio.Future()
 
+    def _reset_session(self):
+        """Forget all collected trials; the next trial_start begins a new session."""
+        self._trials = []
+        self._current_trial = None
+        self._ready_to_save_sent = False
+        self._rejected = {"too_short": 0, "wrong_shape": 0}
+        self._emit("trial_count", 0)
+
+    async def _handle_session_start(self):
+        """The browser pressed Start: begin a new session with an empty trial list.
+
+        Clearing happens only here and after a successful save, never on connect, so a
+        reconnecting browser cannot wipe a session in progress. The server accepts a
+        single client, so no other client's data can be affected.
+        """
+        if self._phase != "collection":
+            return
+        if self._trials:
+            logger.info(f"session_start: discarding {len(self._trials)} unsaved trial(s)")
+            self._emit("log", f"session_start: discarded {len(self._trials)} unsaved trial(s)")
+        self._reset_session()
+        await self.send({"type": "trial_count", "count": 0})
+
     async def _handle_trial_start(self, msg: dict):
         if self._phase != "collection":
             return
 
         label = msg.get("label")
-        if label not in ("Left Hand", "Right Hand", "Rest"):
+        if label not in CLASS_INDEX:
             await self.send({"type": "error", "message": f"Invalid label: {label}"})
             return
 
-        trial_samples = int(self._sampling_rate * self._cfg["server"]["trial_seconds"])
-
+        with self._buf_lock:
+            start_counter = self._sample_counter
         self._current_trial = {
             "label": label,
-            "start_counter": self._sample_counter
+            "start_counter": start_counter
         }
-        logger.info(f"Trial start: {label} at counter {self._sample_counter}")
+        logger.info(f"Trial start: {label} at counter {start_counter}")
 
+    async def _reject_trial(self, reason: str, label: str, detail: str):
+        """Log (and show) why a trial was not kept; ``reason`` is too_short or wrong_shape."""
+        self._rejected[reason] += 1
+        text = f"Trial rejected ({reason}, label={label}): {detail}"
+        logger.warning(text)
+        self._emit("log", f"✗ {text}")
+        await self.send({"type": "error", "message": text})
+        self._current_trial = None
 
     async def _handle_trial_end(self, msg: dict):
+        """Cut the trial from the sample buffer and keep it if it is long enough.
+
+        The window is the samples counted between trial_start and trial_end, at least
+        80 % of ``trial_samples`` (else rejected). A short window is padded by repeating
+        its last sample; a long one is trimmed to its LAST ``trial_samples`` samples. (The
+        Graz module, ``EEGWorker.stop_recording``, trims to the FIRST samples instead.)
+        """
         if self._phase != "collection":
             return
         if not self._current_trial:
@@ -229,28 +273,23 @@ class BCGServer:
             return
 
         # Optionally check label consistency
-        end_label = msg.get("label", self._current_trial["label"])
-        if end_label != self._current_trial["label"]:
-            logger.warning(f"Label mismatch: start={self._current_trial['label']} end={end_label}")
+        label = self._current_trial["label"]
+        end_label = msg.get("label", label)
+        if end_label != label:
+            logger.warning(f"Label mismatch: start={label} end={end_label}")
 
-        start_counter = self._current_trial["start_counter"]  
-        n_samples = self._sample_counter - start_counter       
+        start_counter = self._current_trial["start_counter"]
+        with self._buf_lock:
+            n_samples = self._sample_counter - start_counter
+            buf_len = len(self._buf)
+            samples_in_buf = min(n_samples, buf_len)
+            window = self._buf[buf_len - samples_in_buf:]
 
-        buf_len = len(self._buf)
-        samples_in_buf = min(n_samples, buf_len)
-        window = self._buf[buf_len - samples_in_buf:]
-
-        if n_samples < int(self._trial_samples * 0.8):
-            msg = (
-                f"Trial window too short "
-                f"(label={self._current_trial['label']}, "
-                f"samples={n_samples}, "
-                f"expected>={int(self._trial_samples * 0.8)})"
-            )
-
-            logger.warning(msg)
-            await self.send({"type": "error", "message": msg})
-            self._current_trial = None
+        min_samples = int(self._trial_samples * 0.8)
+        if n_samples < min_samples:
+            await self._reject_trial(
+                "too_short", label,
+                f"samples={n_samples}, expected>={min_samples} of {self._trial_samples}")
             return
 
         # Trim / pad to exact length
@@ -261,15 +300,20 @@ class BCGServer:
             while len(window) < target:
                 window.append(window[-1])
 
-        eeg = np.array(window, dtype=np.float32).T
-        if eeg.shape[0] != self._n_channels:
-            logger.warning(f"Trial bad shape after slice: {eeg.shape}")
-            self._current_trial = None
+        try:
+            eeg = np.array(window, dtype=np.float32).T
+        except ValueError as e:      # samples of different lengths
+            await self._reject_trial("wrong_shape", label, f"samples not rectangular: {e}")
+            return
+        if eeg.shape != (self._n_channels, target):
+            await self._reject_trial(
+                "wrong_shape", label,
+                f"shape={eeg.shape}, expected={(self._n_channels, target)}")
             return
 
-        self._trials.append({"label": self._current_trial["label"], "eeg": eeg})
+        self._trials.append({"label": label, "eeg": eeg})
         n = len(self._trials)
-        logger.info(f"Trial {n}: {self._current_trial['label']} — shape={eeg.shape}")
+        logger.info(f"Trial {n}: {label} — shape={eeg.shape}")
 
         # Notify client about count
         await self.send({"type": "trial_count", "count": n})
@@ -286,48 +330,76 @@ class BCGServer:
         self._current_trial = None
 
     async def _handle_save_game_session(self, msg: dict):
+        """Save the collected trials to an .npz and start a fresh session.
+
+        ``min_trials`` is the target number of trials. With fewer trials the save is
+        refused, unless the browser sends ``allow_incomplete`` (its tile pool ran out): the
+        file is then written with the extra keys ``complete=False`` and ``n_trials``.
+        """
         if self._phase != "collection":
             await self.send({"type": "error", "message": "Can only save during collection phase"})
             return
 
+        have = len(self._trials)
         min_trials = msg.get("min_trials")
-        if isinstance(min_trials, (int, float)) and int(min_trials) > 0:
-            min_trials = int(min_trials)
-            if len(self._trials) < min_trials:
-                await self.send({
-                    "type": "error",
-                    "message": f"Not enough trials to save: have {len(self._trials)} need {min_trials}",
-                })
-                return
+        required = int(min_trials) if isinstance(min_trials, (int, float)) and int(min_trials) > 0 else None
+        complete = required is None or have >= required
+        if not complete and not msg.get("allow_incomplete"):
+            await self.send({
+                "type": "error",
+                "message": f"Not enough trials to save: have {have} need {required}",
+            })
+            return
 
         try:
-            path = self._save_game_trials_npz()
+            path = self._save_game_trials_npz(complete=complete)
         except Exception as e:
             logger.exception("Save failed")
             await self.send({"type": "error", "message": f"Save failed: {e}"})
+            if not complete:
+                self._emit("log", f"⚠ Incomplete session NOT saved: {e}")
             return
 
-        await self.send({"type": "session_saved", "method": "game", "path": str(path), "trials": len(self._trials)})
-        self._emit("log", f"✓ Saved game session → {path.name}")
+        if complete:
+            self._emit("log", f"✓ Saved game session → {path.name}")
+        else:
+            warning = f"INCOMPLETE session saved: {have} of {required} trials (complete=False) → {path.name}"
+            logger.warning(warning)
+            self._emit("log", f"⚠ {warning}")
+        if any(self._rejected.values()):
+            self._emit("log", f"Rejected trials this session: {self._rejected}")
+        await self.send({"type": "session_saved", "method": "game", "path": str(path),
+                         "trials": have, "complete": complete, "required": required})
 
-    def _save_game_trials_npz(self) -> Path:
+        # Saved: the next participant on this server starts from zero.
+        self._reset_session()
+
+    def _save_game_trials_npz(self, complete: bool = True) -> Path:
+        """Write ``bcg_game_session_<timestamp>.npz`` into the save directory.
+
+        Keys: eeg_data (n_trials, n_times, n_ch) float32, labels int32 (0 Left, 1 Rest,
+        2 Right), class_names, method, sampling_rate, trial_seconds. An incomplete session
+        also gets ``complete`` (False) and ``n_trials``; complete sessions do not.
+        """
         # Trials store eeg as (n_ch, n_times). Save as (n_trials, n_times, n_ch) to match bcg_collect.
         if not self._trials:
             raise ValueError("No trials to save")
 
-        classes = self._cfg.get("live", {}).get("classes") or ["Left Hand", "Rest", "Right Hand"]
-        label_map = {cls: i for i, cls in enumerate(classes)}
+        classes = list(CLASS_ORDER)
+        label_map = CLASS_INDEX
 
         eeg_list = []
         y_list = []
         for t in self._trials:
             label = t.get("label")
             if label not in label_map:
+                logger.warning(f"Save: skipping trial with unknown label {label!r}")
                 continue
             eeg = t.get("eeg")
             if not isinstance(eeg, np.ndarray):
                 eeg = np.asarray(eeg, dtype=np.float32)
             if eeg.ndim != 2:
+                logger.warning(f"Save: skipping trial with bad shape {eeg.shape}")
                 continue
             # (n_ch, n_times) -> (n_times, n_ch)
             eeg_list.append(eeg.T.astype(np.float32))
@@ -343,8 +415,7 @@ class BCGServer:
         file_name = f"bcg_game_session_{ts}.npz"
         out_path = self._save_dir / file_name
 
-        np.savez(
-            out_path,
+        arrays = dict(
             eeg_data=eeg_arr,
             labels=labels_arr,
             class_names=np.asarray(classes),
@@ -352,6 +423,10 @@ class BCGServer:
             sampling_rate=np.asarray(int(self._sampling_rate)),
             trial_seconds=np.asarray(float(self._cfg["server"]["trial_seconds"])),
         )
+        if not complete:
+            arrays["complete"] = np.asarray(False)
+            arrays["n_trials"] = np.asarray(int(len(labels_arr)))
+        np.savez(out_path, **arrays)
         logger.info(f"Saved game session → {out_path} ({len(labels_arr)} trials)")
         return out_path
 
@@ -427,13 +502,13 @@ class BCGServer:
         epochs = self._cfg["server"]["calibration_epochs"]
         n_times = int(sr * self._cfg["server"]["trial_seconds"])
 
-        pretrained_path = Path(__file__).parent / self._cfg["live"]["model_path"]
-        output_path = Path(__file__).parent / "models" / "eegnet_game_calibrated.pth"
+        pretrained_path = resolve_path(self._cfg["live"]["model_path"])
+        output_path = ROOT / "models" / "eegnet_game_calibrated.pth"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # ---> Prepare data
         preprocessor = EEGPreprocessor(sampling_rate=sr)
-        label_map = {"Left Hand": 0, "Right Hand": 1, "Rest": 2}
+        label_map = CLASS_INDEX
 
         X_list, y_list = [], []
         for trial in self._trials:

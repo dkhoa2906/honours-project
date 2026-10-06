@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import logging
 import sys
 import os
@@ -18,7 +19,6 @@ from bcg_core.config_schema import AppConfig
 from bcg_core.eeg_worker import EEGWorker
 from bcg_core.classifier import RealtimeClassifier
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 COLORS = {
@@ -43,7 +43,6 @@ class MILiveWindow(QMainWindow):
         self._buffer     = deque(maxlen=int(config.preprocessing.sampling_rate * 4))
         self._step_count = 0
         self._running    = False
-        self._last_pred  = None
 
         self._classifier = RealtimeClassifier(
             checkpoint_path      = self._live.model_path,
@@ -249,15 +248,30 @@ class MILiveWindow(QMainWindow):
         window = np.array(self._buffer, dtype=np.float32).T
         try:
             pred, conf = self._classifier.predict(window)
-            self._update_ui(pred, conf)
+            if pred is None:
+                self._show_no_prediction()
+            else:
+                self._update_ui(pred, conf)
         except Exception as e:
             logger.error(f"Predict error: {e}")
 
 
 
+    def _show_no_prediction(self):
+        """The classifier failed on this window: show an error instead of a class."""
+        from datetime import datetime
+        self._reset_cards()
+        self._lb_cue.setText("No prediction")
+        self._lb_cue.setStyleSheet("color:#DC143C;")
+        self._lb_status.setText("● No prediction (error)")
+        self._lb_status.setStyleSheet("color:#DC143C;")
+        self._log_line(f"[{datetime.now().strftime('%H:%M:%S')}]  no prediction (see log)")
+
     def _update_ui(self, pred: str, conf: float):
         from datetime import datetime
         ts = datetime.now().strftime("%H:%M:%S")
+        self._lb_status.setText("● Streaming")
+        self._lb_status.setStyleSheet(f"color:{COLORS['green']};")
 
         for cls in self._classes:
             self._conf_bars[cls].setValue(0)
@@ -283,7 +297,6 @@ class MILiveWindow(QMainWindow):
             self._lb_cue.setStyleSheet(f"color:{self._class_colors.get(pred,'#e0e0e0')};")
 
         self._log_line(f"[{ts}]  {pred:<12}  {conf:.1f}%")
-        self._last_pred = pred
 
     def _reset_cards(self):
         for cls in self._classes:
@@ -301,7 +314,10 @@ class MILiveWindow(QMainWindow):
 
 if __name__ == "__main__":
     import json
-    with open("config/milive_conf.json") as f:
+    from bcg_core.log import setup_logging
+    from bcg_core.paths import ROOT
+    setup_logging()
+    with open(ROOT / "config" / "milive_conf.json") as f:
         config = AppConfig.model_validate(json.load(f))
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
